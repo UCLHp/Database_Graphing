@@ -57,7 +57,8 @@ from bokeh.models.widgets import Tabs
 # Import the tab scripts. Each script creates exactly one tab. (As mentioned
 # earlier if there are problems importing these scripts then make sure that
 # there is an empty file called __init__.py in the scripts folder).
-from scripts.filename import Function_Name
+from scripts.ColorMapperV3 import ColorMapper
+from scripts.VerticalProfile import VerticalProfiler
 
 # Import pypyodbc as this is how conections to the database can be achieved.
 import pypyodbc
@@ -132,7 +133,8 @@ def produce_doc(doc):
     ############################################################################
     ######################## CREATE EACH OF THE TABS ###########################
 
-    tab1 = Function_Name(conn)
+    tab1 = ColorMapper(conn)
+    # tab2 = VerticalProfiler(conn)
     tabs = Tabs(tabs = [tab1])
 
     # Put all of the tabs into the doccument
