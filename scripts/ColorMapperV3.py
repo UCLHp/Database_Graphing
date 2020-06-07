@@ -18,7 +18,7 @@ from bokeh.models import (CategoricalColorMapper, HoverTool, BoxZoomTool,
 	PanTool, WheelZoomTool, ResetTool, ColumnDataSource, Panel,
 	FuncTickFormatter, SingleIntervalTicker, LinearAxis, CustomJS,
 	DatetimeTickFormatter, BasicTickFormatter, NumeralTickFormatter, Arrow,
-	NormalHead, OpenHead, VeeHead, Label)
+	NormalHead, OpenHead, VeeHead, Label, PointDrawTool, Range1d)
 from bokeh.models.widgets import (CheckboxGroup, Slider, RangeSlider,
 	Tabs, CheckboxButtonGroup, Dropdown, TableColumn, DataTable, Select,
 	DateRangeSlider)
@@ -86,11 +86,15 @@ def ColorMapper(conn):
 	print(arr1[600, 800])
 
 
+
+
+
 	# Set some values for the start and end x and y
 	x_prof_start = 600
 	x_prof_end = 600
-	y_prof_start = 0
-	y_prof_end = 1600
+	y_prof_start = 200
+	y_prof_end = 1000
+
 	# Calculate how long the line is
 	prof_length = math.sqrt((x_prof_start-x_prof_end)**2
 		+ (y_prof_start-y_prof_end)**2)
@@ -101,8 +105,10 @@ def ColorMapper(conn):
 	y_prof_sample = np.linspace(y_prof_start, y_prof_end, prof_sample)
 	# Map coordinates is like an interpolation thing. Come back to this later?
 	z_prof_sample = map_coordinates(arr1, np.vstack((y_prof_sample, x_prof_sample)))
+	# Normalise to the max value in the profile
+	z_prof_sample = z_prof_sample*(100/(max(z_prof_sample)))
 	# Make it into a dictionary
-	dict_prof = {'x': list(range(0, len(z_prof_sample))),
+	dict_prof = {	'x': list(range(0, len(z_prof_sample))),
 					'y': z_prof_sample}
 	df_prof = pd.DataFrame(dict_prof)
 	src_prof = ColumnDataSource(df_prof.to_dict(orient='list'))
@@ -110,6 +116,12 @@ def ColorMapper(conn):
 	p_prof.line(source=src_prof, x='x', y='y')
 	p_prof.plot_height = 300
 	p_prof.plot_width = 600
+
+	dict_prof_points = {'x': [x_prof_start, x_prof_end],
+						'y': [y_prof_start, y_prof_end]}
+	df_prof_points = pd.DataFrame(dict_prof_points)
+	src_prof_points = ColumnDataSource(df_prof_points.to_dict(orient='list'))
+
 
 
 
@@ -123,12 +135,19 @@ def ColorMapper(conn):
 	p_main.image(image=[arr1], x=0, y=0, dw=dw1, dh=dh1, palette="Spectral11", level="image")
 
 
+	# Add a the line profile to the main image.
+	p_main.line(source=src_prof_points, x='x', y='y', line_width=2,
+		color='black')
+	c1 = p_main.circle(source=src_prof_points, x='x', y='y', color='black',
+		fill_alpha=0.5, size=12)
+	p_main.add_tools(PointDrawTool(renderers=[c1], num_objects=2))
+
 	# Define the expected position of the spots
 	spot_tl = SpotParameters(600, 800, 40, 605, 798)
-	spot_tc = SpotParameters(800, 800, 40, 605, 798)
-	spot_tr = SpotParameters(1000, 800, 40, 605, 798)
-	spot_ml = SpotParameters(600, 600, 40, 605, 798)
-	spot_mc = SpotParameters(800, 600, 50, 605, 798)
+	spot_tc = SpotParameters(800, 800, 40, 803.5, 798)
+	spot_tr = SpotParameters(1000, 800, 40, 997.5, 795)
+	spot_ml = SpotParameters(600, 600, 40, 602.1, 585)
+	spot_mc = SpotParameters(800, 600, 40, 605, 798)
 	spot_mr = SpotParameters(1000, 600, 40, 605, 798)
 	spot_bl = SpotParameters(600, 400, 40, 605, 798)
 	spot_bc = SpotParameters(800, 400, 40, 605, 798)
@@ -153,8 +172,7 @@ def ColorMapper(conn):
 		p_main.line(source=src_spot, x='x_'+spot_positions[i],
 			y='y_'+spot_positions[i], line_width=2, color='firebrick')
 
-	p_main.line(source=src_spot, x='x_tl',
-			y='y_tl', line_width=2, color='firebrick')
+
 	# Initialise all the figures and put in a list to iterate over. Lock the
 	# aspect ratio of the box tool so it doesn't end up stretching the images.
 	p_tl = figure(tools=[PanTool(), WheelZoomTool(),
@@ -197,7 +215,11 @@ def ColorMapper(conn):
 			text = 'x=' + str(spot_parameters[i].x_pos_meas-spot_parameters[i].x_pos_exp) +
 			' y=' + str(spot_parameters[i].y_pos_meas-spot_parameters[i].y_pos_exp)))
 
-
+		plots[i].line(source=src_prof_points, x='x', y='y', line_width=2,
+			color='black')
+		c1 = plots[i].circle(source=src_prof_points, x='x', y='y', color='black',
+			fill_alpha=0.5, size=12)
+		plots[i].add_tools(PointDrawTool(renderers=[c1], num_objects=2))
 
 
 
@@ -270,6 +292,40 @@ def ColorMapper(conn):
 		plots[i].x_range.on_change('end', callback_range)
 		plots[i].y_range.on_change('start', callback_range)
 		plots[i].y_range.on_change('end', callback_range)
+
+
+	def callback_prof (attr, old, new):
+
+		# I think src_prof.data already is a dictionary but just to make sure
+		dict_prof_points = src_prof_points.data
+		print(dict_prof_points)
+
+		x_prof_start, x_prof_end = dict_prof_points['x']
+		y_prof_start, y_prof_end = dict_prof_points['y']
+
+		# Calculate how long the line is
+		prof_length = math.sqrt((x_prof_start-x_prof_end)**2
+			+ (y_prof_start-y_prof_end)**2)
+		# Going to sample every 0.1 pixels which should be plenty
+		prof_sample = int(prof_length/0.1)
+		# Create a list of the x and y coordinates
+		x_prof_sample = np.linspace(x_prof_start, x_prof_end, prof_sample)
+		y_prof_sample = np.linspace(y_prof_start, y_prof_end, prof_sample)
+		# Map coordinates is like an interpolation thing. Come back to this later?
+		z_prof_sample = map_coordinates(arr1, np.vstack((y_prof_sample, x_prof_sample)))
+		# Normalise to the max value in the profile
+		z_prof_sample = z_prof_sample*(100/(max(z_prof_sample)))
+		# Make it into a dictionary
+		dict_prof = {'x': list(range(0, len(z_prof_sample))),
+						'y': z_prof_sample}
+		df_prof = pd.DataFrame(dict_prof)
+
+		src_prof.data = df_prof.to_dict(orient='list')
+
+		return
+
+	src_prof_points.on_change('data', callback_prof)
+
 
 
 	# Return the panel
