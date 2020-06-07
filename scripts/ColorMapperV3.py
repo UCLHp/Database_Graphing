@@ -100,7 +100,7 @@ def ColorMapper(conn):
 	x_prof_sample = np.linspace(x_prof_start, x_prof_end, prof_sample)
 	y_prof_sample = np.linspace(y_prof_start, y_prof_end, prof_sample)
 	# Map coordinates is like an interpolation thing. Come back to this later?
-	z_prof_sample = map_coordinates(arr1, np.vstack((x_prof_sample, y_prof_sample)))
+	z_prof_sample = map_coordinates(arr1, np.vstack((y_prof_sample, x_prof_sample)))
 	# Make it into a dictionary
 	dict_prof = {'x': list(range(0, len(z_prof_sample))),
 					'y': z_prof_sample}
