@@ -133,11 +133,14 @@ def Photon_Output_Graph(conn):
 
 
 	color_column = 'energy'
-	custom_color_boolean = False
-	custom_color_palette = []
+	custom_color_boolean = True
+	custom_color_palette = ['#FF0000', 'black', 'yellow', 'purple', '#008F8F', '#FF00FF', 'white']
 	marker_column = 'machinename'
-	custom_marker_boolean = False
-	custom_marker_palette = []
+	custom_marker_boolean = True
+	custom_marker_palette = [ 	'circle_x', 'square', 'square_x', 'diamond',
+								'hex', 'x', 'circle_cross',
+								'square_cross', 'diamond_cross', 'dash', 'cross',
+								'inverted_triangle', 'circle', 'triangle', 'asterisk']
 
 	(color_list, color_palette, marker_list, marker_palette, df,
 		add_legend_to_df) = Create_Legend(df, color_column,
