@@ -4,14 +4,14 @@ import pandas as pd
 import numpy as np
 # Import some basic tools from easygui to allow for user interface
 from easygui import buttonbox, msgbox
-from datetime import date
+from datetime import date, timedelta
 
 from bokeh.plotting import figure
 from bokeh.models import (CategoricalColorMapper, HoverTool, BoxZoomTool,
 						  ColumnDataSource, Panel,
 						  FuncTickFormatter, SingleIntervalTicker, LinearAxis,
 						  CustomJS, DatetimeTickFormatter, BasicTickFormatter,
-						  NumeralTickFormatter)
+						  NumeralTickFormatter, Range1d)
 from bokeh.models.widgets import (CheckboxGroup, Slider, RangeSlider,
 								  Tabs, CheckboxButtonGroup, Dropdown,
 								  TableColumn, DataTable, Select,
@@ -217,6 +217,11 @@ def Photon_Output_Graph(conn):
 	# Run the Define_Plot_Parameters function to set the plot parameters
 	Define_Plot_Parameters(p1, list_plot_parameters)
 
+	print(Sub_df1['x'].max())
+	print(Sub_df1['x'].max() - timedelta(weeks=53))
+	p1.x_range = Range1d((Sub_df1['x'].max() - timedelta(weeks=53)),
+		(Sub_df1['x'].max() + timedelta(weeks=1)))
+	p1.y_range = Range1d(-3, 3)
 
 
 
