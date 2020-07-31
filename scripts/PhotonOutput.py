@@ -11,7 +11,7 @@ from bokeh.models import (CategoricalColorMapper, HoverTool, BoxZoomTool,
 						  ColumnDataSource, Panel,
 						  FuncTickFormatter, SingleIntervalTicker, LinearAxis,
 						  CustomJS, DatetimeTickFormatter, BasicTickFormatter,
-						  NumeralTickFormatter, Range1d)
+						  NumeralTickFormatter, Range1d, Div)
 from bokeh.models.widgets import (CheckboxGroup, Slider, RangeSlider,
 								  Tabs, CheckboxButtonGroup, Dropdown,
 								  TableColumn, DataTable, Select,
@@ -133,11 +133,14 @@ def Photon_Output_Graph(conn):
 
 
 	color_column = 'energy'
-	custom_color_boolean = False
-	custom_color_palette = []
+	custom_color_boolean = True
+	custom_color_palette = ['#FF0000', 'black', 'yellow', 'purple', '#008F8F', '#FF00FF', 'white']
 	marker_column = 'machinename'
-	custom_marker_boolean = False
-	custom_marker_palette = []
+	custom_marker_boolean = True
+	custom_marker_palette = [ 	'circle_x', 'square', 'square_x', 'diamond',
+								'hex', 'x', 'circle_cross',
+								'square_cross', 'diamond_cross', 'dash', 'cross',
+								'inverted_triangle', 'circle', 'triangle', 'asterisk']
 
 	(color_list, color_palette, marker_list, marker_palette, df,
 		add_legend_to_df) = Create_Legend(df, color_column,
@@ -217,11 +220,7 @@ def Photon_Output_Graph(conn):
 	# Run the Define_Plot_Parameters function to set the plot parameters
 	Define_Plot_Parameters(p1, list_plot_parameters)
 
-	print(Sub_df1['x'].max())
-	print(Sub_df1['x'].max() - timedelta(weeks=53))
-	p1.x_range = Range1d((Sub_df1['x'].max() - timedelta(weeks=53)),
-		(Sub_df1['x'].max() + timedelta(weeks=1)))
-	p1.y_range = Range1d(-3, 3)
+
 
 
 
@@ -311,6 +310,14 @@ def Photon_Output_Graph(conn):
 	######## 6)
 	# Make an 'Update Button' to requery the database and get up to date data.
 	update_button = Button(label='Update', button_type='success')
+	range_button = Button(label='Range', button_type='primary')
+
+
+	######## 7)
+	# Make some titles for the checkboxes
+	color_title = Div(text='<b>Energy Choice</b>')
+	marker_title = Div(text='<b>Machine Choice</b>')
+	hover_title = Div(text='<b>Hovertool Fields</b>')
 
 
 
@@ -320,12 +327,15 @@ def Photon_Output_Graph(conn):
 
 	# Create a layout where the widgets will be added and any scaling applied.
 	if color_column == marker_column:
-		layout_checkbox = column([checkbox_color, checkbox_hovertool])
+		layout_checkbox = column([color_title, checkbox_color, hover_title,
+		checkbox_hovertool])
 	else:
-		layout_checkbox = column([checkbox_color, checkbox_marker,
-			checkbox_hovertool])
+		layout_checkbox = column([color_title, checkbox_color, marker_title,
+			checkbox_marker, hover_title, checkbox_hovertool])
 
-	layout_plots = column([	update_button,
+	button_row = row([update_button, range_button])
+
+	layout_plots = column([	button_row,
 							select_xaxis, select_yaxis, select_legend,
 							range_slider_x, range_slider_y,
 							range_slider_xdate, range_slider_ydate,
@@ -496,6 +506,11 @@ def Photon_Output_Graph(conn):
 			range_slider_x, range_slider_y, range_slider_xdate,
 			range_slider_ydate)
 
+		print(p1.x_range.start)
+		print(p1.x_range.end)
+		print(p1.y_range.start)
+		print(p1.y_range.end)
+
 		# Update the ColumnDataSources.
 		src1.data = Sub_df1.to_dict(orient='list')
 		src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
@@ -629,6 +644,35 @@ def Photon_Output_Graph(conn):
 		return
 
 	p1.on_event('reset', callback_reset)
+
+
+
+	def callback_range2():
+
+		x_data1 = select_xaxis.value
+		y_data1 = select_yaxis.value
+
+		if (x_data1 == 'adate') and ((y_data1 == 'graph % diff in output')
+			or (y_data1 == 'output')):
+
+			p1.x_range.start = Sub_df1['x'].max() - timedelta(weeks=53)
+			p1.x_range.end = Sub_df1['x'].max() + timedelta(weeks=1)
+
+			if y_data1 == 'output':
+				p1.y_range.start = 97
+				p1.y_range.end = 103
+			elif y_data1 == 'graph % diff in output':
+				p1.y_range.start = -3
+				p1.y_range.end = 3
+
+		print(p1.x_range.start)
+		print(p1.x_range.end)
+		print(p1.y_range.start)
+		print(p1.y_range.end)
+
+		return
+
+	range_button.on_click(callback_range2)
 
 
 	############################################################################
