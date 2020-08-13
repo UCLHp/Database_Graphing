@@ -49,7 +49,7 @@ def Photon_Output_Graph(conn):
 							'[Gantry angle], [Temp], [Press], [T/P factor], ' \
 							'[output], [QI], [Comments], ' \
 							'[Graph % Diff in output], [Graph % diff in QI] ' \
-							'FROM [phcal_Graph]' \
+							'FROM [phcal_Graph] ' \
 							, conn	)
 
 		# Delete empty rows where the data is very important to have
@@ -75,9 +75,11 @@ def Photon_Output_Graph(conn):
 		# relatively small datasets. Possibly someway to feed multiple formats
 		# but currently more effort than it's worth.
 		df.loc[:,'adate'] = pd.to_datetime(df.loc[:,'adate'], dayfirst=True)
-		# Create a list of the fields using the dataframe. By doing it now before
-		# the extra legend fields are added it's easy to limit what is displayed in
-		# the select widgets.
+
+
+		df=df[df['machinename'].isin(['TrueBeam B', 'TrueBeam C', 'TrueBeam D',
+			'TrueBeam F'])]
+
 		return df
 
 	df = Create_df()
@@ -301,17 +303,12 @@ def Photon_Output_Graph(conn):
 		hover_tool_fields)
 
 	######## 5)
-	# These range sliders will be used to change the displayed x and y ranges
-	(range_slider_x, range_slider_y, range_slider_xdate,
-		range_slider_ydate) = Create_Range_Sliders()
-	Update_Range_Sliders(x_data1, y_data1, Sub_df1, range_slider_x,
-		range_slider_y, range_slider_xdate, range_slider_ydate)
-
-	######## 6)
 	# Make an 'Update Button' to requery the database and get up to date data.
 	update_button = Button(label='Update', button_type='success')
-	range_button = Button(label='Range', button_type='primary')
 
+	######## 6)
+	# Make a Range Button
+	range_button = Button(label='Range', button_type='primary')
 
 	######## 7)
 	# Make some titles for the checkboxes
@@ -335,11 +332,8 @@ def Photon_Output_Graph(conn):
 
 	button_row = row([update_button, range_button])
 
-	layout_plots = column([	button_row,
-							select_xaxis, select_yaxis, select_legend,
-							range_slider_x, range_slider_y,
-							range_slider_xdate, range_slider_ydate,
-							p1	])
+	layout_plots = column([	button_row, select_xaxis, select_yaxis,
+							select_legend,p1	])
 
 	tab_layout = row([layout_plots, layout_checkbox])
 
@@ -354,12 +348,6 @@ def Photon_Output_Graph(conn):
 	#
 	# Create a big callback that does everything?
 	def callback(attr, old, new):
-
-		# When making changes to the
-		x_range_start = p1.x_range.start
-		x_range_end = p1.x_range.end
-		y_range_start = p1.y_range.start
-		y_range_end = p1.y_range.end
 
 		# Want to acquire the current values of all of the checkboxes and select
 		# widgets to provide as inputs for the re-plot.
@@ -415,12 +403,6 @@ def Photon_Output_Graph(conn):
 		src1.data = Sub_df1.to_dict(orient='list')
 		src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
 
-		# When making changes to the
-		p1.x_range.start = x_range_start
-		p1.x_range.end = x_range_end
-		p1.y_range.start = y_range_start
-		p1.y_range.end = y_range_end
-
 		return
 
 	checkbox_color.on_change('active', callback)
@@ -446,6 +428,7 @@ def Photon_Output_Graph(conn):
 		return
 
 	select_legend.on_change('value', callback_legend)
+
 
 
 
@@ -501,16 +484,6 @@ def Photon_Output_Graph(conn):
 		Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
 			plot1_ydata_to_plot, Sub_df1, df_tol1)
 
-		# Use the pre-defined range_slider function to update the sliders
-		Update_Range_Sliders(plot1_xdata_to_plot, plot1_ydata_to_plot, Sub_df1,
-			range_slider_x, range_slider_y, range_slider_xdate,
-			range_slider_ydate)
-
-		print(p1.x_range.start)
-		print(p1.x_range.end)
-		print(p1.y_range.start)
-		print(p1.y_range.end)
-
 		# Update the ColumnDataSources.
 		src1.data = Sub_df1.to_dict(orient='list')
 		src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
@@ -521,32 +494,6 @@ def Photon_Output_Graph(conn):
 	# selected by the select_axis widget.
 	select_xaxis.on_change('value', callback_axis)
 	select_yaxis.on_change('value', callback_axis)
-
-
-
-
-	def callback_range(attr, old, new):
-
-		plot1_xdata_to_plot = select_xaxis.value
-		plot1_ydata_to_plot = select_yaxis.value
-
-		if plot1_xdata_to_plot == 'adate':
-			p1.x_range.start, p1.x_range.end = range_slider_xdate.value
-		else:
-			p1.x_range.start, p1.x_range.end = range_slider_x.value
-
-		if plot1_ydata_to_plot == 'adate':
-			p1.y_range.start, p1.y_range.end = range_slider_ydate.value
-		else:
-			p1.y_range.start, p1.y_range.end = range_slider_y.value
-
-		return
-
-	range_slider_x.on_change('value', callback_range)
-	range_slider_y.on_change('value', callback_range)
-	range_slider_xdate.on_change('value', callback_range)
-	range_slider_ydate.on_change('value', callback_range)
-
 
 
 
@@ -598,10 +545,6 @@ def Photon_Output_Graph(conn):
 		Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
 			plot1_ydata_to_plot, Sub_df1, df_tol1)
 
-		# Update the range sliders
-		Update_Range_Sliders(plot1_xdata_to_plot, plot1_ydata_to_plot, Sub_df1,
-			range_slider_x, range_slider_y, range_slider_xdate,
-			range_slider_ydate)
 
 		# Update the ColumnDataSources.
 		src1.data = Sub_df1.to_dict(orient='list')
@@ -614,40 +557,7 @@ def Photon_Output_Graph(conn):
 
 
 
-	def callback_reset():
-
-		color_to_plot = [	checkbox_color.labels[i] for i in
-							checkbox_color.active]
-		marker_to_plot = [	checkbox_marker.labels[i] for i in
-								checkbox_marker.active]
-		plot1_xdata_to_plot = select_xaxis.value
-		plot1_ydata_to_plot = select_yaxis.value
-		x_axis_title1 = plot1_xdata_to_plot
-		y_axis_title1 = plot1_ydata_to_plot
-		legend_location = select_legend.value
-
-		# Use the pre-defined Make_Dataset function with these new inputs to
-		# create new versions of the sub dataframes.
-		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
-			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
-
-		if plot1_ydata_to_plot == 'adate':
-			range_slider_ydate.value = (Sub_df1['y'].min(), Sub_df1['y'].max())
-		else:
-			range_slider_y.value = (Sub_df1['y'].min(), Sub_df1['y'].max())
-
-		if plot1_xdata_to_plot == 'adate':
-			range_slider_xdate.value = (Sub_df1['x'].min(), Sub_df1['x'].max())
-		else:
-			range_slider_x.value = (Sub_df1['x'].min(), Sub_df1['x'].max())
-
-		return
-
-	p1.on_event('reset', callback_reset)
-
-
-
-	def callback_range2():
+	def callback_range():
 
 		x_data1 = select_xaxis.value
 		y_data1 = select_yaxis.value
@@ -672,7 +582,8 @@ def Photon_Output_Graph(conn):
 
 		return
 
-	range_button.on_click(callback_range2)
+	range_button.on_click(callback_range)
+
 
 
 	############################################################################
