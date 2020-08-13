@@ -430,7 +430,7 @@ def Create_Legend(	df, color_column, custom_color_boolean,
 	# If custom_color_palette is not requested by the writter then will want to
 	# use the default options. The default is the Colorblind palette if it is
 	# large enough and otherwise use the large Turbo palette. (Will error out if
-	# Turbo is not large enough.
+	# Turbo is not large enough).
 	else:
 		if len(color_list) < 8:
 			color_palette = list(Colorblind[len(color_list)])
