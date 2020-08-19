@@ -4,14 +4,14 @@ import pandas as pd
 import numpy as np
 # Import some basic tools from easygui to allow for user interface
 from easygui import buttonbox, msgbox
-from datetime import date
+from datetime import date, timedelta
 
 from bokeh.plotting import figure
 from bokeh.models import (CategoricalColorMapper, HoverTool, BoxZoomTool,
 						  ColumnDataSource, Panel,
 						  FuncTickFormatter, SingleIntervalTicker, LinearAxis,
 						  CustomJS, DatetimeTickFormatter, BasicTickFormatter,
-						  NumeralTickFormatter)
+						  NumeralTickFormatter, Range1d, Div)
 from bokeh.models.widgets import (CheckboxGroup, Slider, RangeSlider,
 								  Tabs, CheckboxButtonGroup, Dropdown,
 								  TableColumn, DataTable, Select,
@@ -49,7 +49,7 @@ def Photon_Output_Graph(conn):
 							'[Gantry angle], [Temp], [Press], [T/P factor], ' \
 							'[output], [QI], [Comments], ' \
 							'[Graph % Diff in output], [Graph % diff in QI] ' \
-							'FROM [phcal_Graph]' \
+							'FROM [phcal_Graph] ' \
 							, conn	)
 
 		# Delete empty rows where the data is very important to have
@@ -75,9 +75,11 @@ def Photon_Output_Graph(conn):
 		# relatively small datasets. Possibly someway to feed multiple formats
 		# but currently more effort than it's worth.
 		df.loc[:,'adate'] = pd.to_datetime(df.loc[:,'adate'], dayfirst=True)
-		# Create a list of the fields using the dataframe. By doing it now before
-		# the extra legend fields are added it's easy to limit what is displayed in
-		# the select widgets.
+
+
+		df=df[df['machinename'].isin(['TrueBeam B', 'TrueBeam C', 'TrueBeam D',
+			'TrueBeam F'])]
+
 		return df
 
 	df = Create_df()
@@ -133,11 +135,14 @@ def Photon_Output_Graph(conn):
 
 
 	color_column = 'energy'
-	custom_color_boolean = False
-	custom_color_palette = []
+	custom_color_boolean = True
+	custom_color_palette = ['#FF0000', 'black', 'yellow', 'purple', '#008F8F', '#FF00FF', 'white']
 	marker_column = 'machinename'
-	custom_marker_boolean = False
-	custom_marker_palette = []
+	custom_marker_boolean = True
+	custom_marker_palette = [ 	'circle_x', 'square', 'square_x', 'diamond',
+								'hex', 'x', 'circle_cross',
+								'square_cross', 'diamond_cross', 'dash', 'cross',
+								'inverted_triangle', 'circle', 'triangle', 'asterisk']
 
 	(color_list, color_palette, marker_list, marker_palette, df,
 		add_legend_to_df) = Create_Legend(df, color_column,
@@ -221,6 +226,7 @@ def Photon_Output_Graph(conn):
 
 
 
+
 	############################################################################
  	############################ ADD TOLERANCES ################################
 
@@ -297,15 +303,18 @@ def Photon_Output_Graph(conn):
 		hover_tool_fields)
 
 	######## 5)
-	# These range sliders will be used to change the displayed x and y ranges
-	(range_slider_x, range_slider_y, range_slider_xdate,
-		range_slider_ydate) = Create_Range_Sliders()
-	Update_Range_Sliders(x_data1, y_data1, Sub_df1, range_slider_x,
-		range_slider_y, range_slider_xdate, range_slider_ydate)
-
-	######## 6)
 	# Make an 'Update Button' to requery the database and get up to date data.
 	update_button = Button(label='Update', button_type='success')
+
+	######## 6)
+	# Make a Range Button
+	range_button = Button(label='Range', button_type='primary')
+
+	######## 7)
+	# Make some titles for the checkboxes
+	color_title = Div(text='<b>Energy Choice</b>')
+	marker_title = Div(text='<b>Machine Choice</b>')
+	hover_title = Div(text='<b>Hovertool Fields</b>')
 
 
 
@@ -315,16 +324,16 @@ def Photon_Output_Graph(conn):
 
 	# Create a layout where the widgets will be added and any scaling applied.
 	if color_column == marker_column:
-		layout_checkbox = column([checkbox_color, checkbox_hovertool])
+		layout_checkbox = column([color_title, checkbox_color, hover_title,
+		checkbox_hovertool])
 	else:
-		layout_checkbox = column([checkbox_color, checkbox_marker,
-			checkbox_hovertool])
+		layout_checkbox = column([color_title, checkbox_color, marker_title,
+			checkbox_marker, hover_title, checkbox_hovertool])
 
-	layout_plots = column([	update_button,
-							select_xaxis, select_yaxis, select_legend,
-							range_slider_x, range_slider_y,
-							range_slider_xdate, range_slider_ydate,
-							p1	])
+	button_row = row([update_button, range_button])
+
+	layout_plots = column([	button_row, select_xaxis, select_yaxis,
+							select_legend,p1	])
 
 	tab_layout = row([layout_plots, layout_checkbox])
 
@@ -339,12 +348,6 @@ def Photon_Output_Graph(conn):
 	#
 	# Create a big callback that does everything?
 	def callback(attr, old, new):
-
-		# When making changes to the
-		x_range_start = p1.x_range.start
-		x_range_end = p1.x_range.end
-		y_range_start = p1.y_range.start
-		y_range_end = p1.y_range.end
 
 		# Want to acquire the current values of all of the checkboxes and select
 		# widgets to provide as inputs for the re-plot.
@@ -400,12 +403,6 @@ def Photon_Output_Graph(conn):
 		src1.data = Sub_df1.to_dict(orient='list')
 		src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
 
-		# When making changes to the
-		p1.x_range.start = x_range_start
-		p1.x_range.end = x_range_end
-		p1.y_range.start = y_range_start
-		p1.y_range.end = y_range_end
-
 		return
 
 	checkbox_color.on_change('active', callback)
@@ -431,6 +428,7 @@ def Photon_Output_Graph(conn):
 		return
 
 	select_legend.on_change('value', callback_legend)
+
 
 
 
@@ -486,11 +484,6 @@ def Photon_Output_Graph(conn):
 		Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
 			plot1_ydata_to_plot, Sub_df1, df_tol1)
 
-		# Use the pre-defined range_slider function to update the sliders
-		Update_Range_Sliders(plot1_xdata_to_plot, plot1_ydata_to_plot, Sub_df1,
-			range_slider_x, range_slider_y, range_slider_xdate,
-			range_slider_ydate)
-
 		# Update the ColumnDataSources.
 		src1.data = Sub_df1.to_dict(orient='list')
 		src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
@@ -501,32 +494,6 @@ def Photon_Output_Graph(conn):
 	# selected by the select_axis widget.
 	select_xaxis.on_change('value', callback_axis)
 	select_yaxis.on_change('value', callback_axis)
-
-
-
-
-	def callback_range(attr, old, new):
-
-		plot1_xdata_to_plot = select_xaxis.value
-		plot1_ydata_to_plot = select_yaxis.value
-
-		if plot1_xdata_to_plot == 'adate':
-			p1.x_range.start, p1.x_range.end = range_slider_xdate.value
-		else:
-			p1.x_range.start, p1.x_range.end = range_slider_x.value
-
-		if plot1_ydata_to_plot == 'adate':
-			p1.y_range.start, p1.y_range.end = range_slider_ydate.value
-		else:
-			p1.y_range.start, p1.y_range.end = range_slider_y.value
-
-		return
-
-	range_slider_x.on_change('value', callback_range)
-	range_slider_y.on_change('value', callback_range)
-	range_slider_xdate.on_change('value', callback_range)
-	range_slider_ydate.on_change('value', callback_range)
-
 
 
 
@@ -578,10 +545,6 @@ def Photon_Output_Graph(conn):
 		Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
 			plot1_ydata_to_plot, Sub_df1, df_tol1)
 
-		# Update the range sliders
-		Update_Range_Sliders(plot1_xdata_to_plot, plot1_ydata_to_plot, Sub_df1,
-			range_slider_x, range_slider_y, range_slider_xdate,
-			range_slider_ydate)
 
 		# Update the ColumnDataSources.
 		src1.data = Sub_df1.to_dict(orient='list')
@@ -594,36 +557,33 @@ def Photon_Output_Graph(conn):
 
 
 
-	def callback_reset():
+	def callback_range():
 
-		color_to_plot = [	checkbox_color.labels[i] for i in
-							checkbox_color.active]
-		marker_to_plot = [	checkbox_marker.labels[i] for i in
-								checkbox_marker.active]
-		plot1_xdata_to_plot = select_xaxis.value
-		plot1_ydata_to_plot = select_yaxis.value
-		x_axis_title1 = plot1_xdata_to_plot
-		y_axis_title1 = plot1_ydata_to_plot
-		legend_location = select_legend.value
+		x_data1 = select_xaxis.value
+		y_data1 = select_yaxis.value
 
-		# Use the pre-defined Make_Dataset function with these new inputs to
-		# create new versions of the sub dataframes.
-		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
-			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
+		if (x_data1 == 'adate') and ((y_data1 == 'graph % diff in output')
+			or (y_data1 == 'output')):
 
-		if plot1_ydata_to_plot == 'adate':
-			range_slider_ydate.value = (Sub_df1['y'].min(), Sub_df1['y'].max())
-		else:
-			range_slider_y.value = (Sub_df1['y'].min(), Sub_df1['y'].max())
+			p1.x_range.start = Sub_df1['x'].max() - timedelta(weeks=53)
+			p1.x_range.end = Sub_df1['x'].max() + timedelta(weeks=1)
 
-		if plot1_xdata_to_plot == 'adate':
-			range_slider_xdate.value = (Sub_df1['x'].min(), Sub_df1['x'].max())
-		else:
-			range_slider_x.value = (Sub_df1['x'].min(), Sub_df1['x'].max())
+			if y_data1 == 'output':
+				p1.y_range.start = 97
+				p1.y_range.end = 103
+			elif y_data1 == 'graph % diff in output':
+				p1.y_range.start = -3
+				p1.y_range.end = 3
+
+		print(p1.x_range.start)
+		print(p1.x_range.end)
+		print(p1.y_range.start)
+		print(p1.y_range.end)
 
 		return
 
-	p1.on_event('reset', callback_reset)
+	range_button.on_click(callback_range)
+
 
 
 	############################################################################

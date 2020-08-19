@@ -8,14 +8,14 @@
 import types
 import pandas as pd
 import numpy as np
-from datetime import date
+from datetime import date, timedelta
 
 from bokeh.plotting import figure
 from bokeh.models import (CategoricalColorMapper, HoverTool, BoxZoomTool,
 						  ColumnDataSource, Panel,
 						  FuncTickFormatter, SingleIntervalTicker, LinearAxis,
 						  CustomJS, DatetimeTickFormatter, BasicTickFormatter,
-						  NumeralTickFormatter)
+						  NumeralTickFormatter, Range1d)
 from bokeh.models.widgets import (CheckboxGroup, Slider, RangeSlider,
 								  Tabs, CheckboxButtonGroup, Dropdown,
 								  TableColumn, DataTable, Select,
@@ -103,8 +103,6 @@ def Create_Select_Legend(legend_location):
 
 ################################################################################
 ################## MAKE CHECKBOXES FOR CHOOSING THE LEGEND #####################
-
-
 
 def Create_Checkbox_Legend(df, color_column, color_to_plot, marker_column,
 		marker_to_plot):
@@ -270,8 +268,6 @@ def Update_Range_Sliders_2(x_data1, y_data1, range_slider_x, range_slider_y,
 ################################################################################
 ################################################################################
 
-
-
 def Update_HoverTool(hover1, x_data1, y_data1, Field1=None, Field2=None,
 		Field3=None, Field4=None, Field5=None, Field6=None, Field7=None,
 		Field8=None, Field9=None, Field10=None):
@@ -357,6 +353,10 @@ def Define_Plot_Parameters (p1, list):
 		p1.yaxis.formatter = BasicTickFormatter()
 
 	return
+
+
+
+
 
 ################################################################################
 ################################################################################
