@@ -1,3 +1,6 @@
+################################################################################
+############################## IMPORT LIBRARIES ################################
+
 # pandas and numpy for data manipulation
 import types
 import pandas as pd
@@ -33,10 +36,48 @@ from scripts.Universal import (	Create_Select_Axis, Create_Select_Legend,
 
 def Photon_Output_Graph(conn):
 
- 	############################################################################
- 	#################### CREATE THE DATA FOR THE GRAPH #########################
-
 	output_file("Photon_Output_Graph.html") #????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+
+ 	############################################################################
+ 	############################# USER INPUTS ##################################
+
+	# Decide what the default viewing option is going to be. (i.e. the fields to
+	# be plotted on the x and y axis when the graph is opened).
+	# NB: Have it set that if axis is 'adate' then will automatically update
+	# to plot datetime.
+	x_data1 = 'adate'
+	y_data1 = 'graph % diff in output'
+	plot_title1 = 'Photon Output Results'
+	x_axis_title1 = x_data1
+	y_axis_title1 = y_data1
+	plot_size_height1 = 450
+	plot_size_width1 = 800
+	legend_location = 'bottom_left'
+	hover_tool_fields = ['chamber and electrometer', 'comments']
+	# Create a list of the plot parameters that will be used as input to a
+	# function later.
+	list_plot_parameters = [x_data1, y_data1, plot_title1, x_axis_title1,
+		y_axis_title1, plot_size_height1, plot_size_width1, legend_location]
+	# Define the fields that the legend will be based off. If there is only
+	# one field then put it in both columns.
+	color_column = 'energy'
+	custom_color_boolean = True
+	custom_color_palette = ['#FF0000', 'black', 'yellow', 'purple', '#008F8F',
+		'#FF00FF', 'white']
+	marker_column = 'machinename'
+	custom_marker_boolean = True
+	custom_marker_palette = [ 	'circle_x', 'square', 'square_x', 'diamond',
+		'hex', 'x', 'circle_cross', 'square_cross', 'diamond_cross', 'dash',
+		'cross', 'inverted_triangle', 'circle', 'triangle', 'asterisk']
+	# From the legend defined above give the values that will be pre-ticked when
+	# the plot is opened. NB: Bokeh will throw an error if one of these lists is
+	# empty (i.e. =[]) If only using color or marker then set the color_to plot
+	# and then enter the command:  marker_to_plot = color_to_plot.
+	color_to_plot = ['6MV', '10MV']
+	marker_to_plot = ['TrueBeam B', 'TrueBeam C', 'TrueBeam D']
+
+	############################################################################
+	#################### CREATE THE DATA FOR THE GRAPH #########################
 
 	# Do this in a function so it can be used in an update callback later
 
@@ -53,8 +94,8 @@ def Photon_Output_Graph(conn):
 							, conn	)
 
 		# Delete empty rows where the data is very important to have
-		df = df.dropna(subset=['protocol id'])
-		df = df.dropna(subset=['energy'])
+		df = df.dropna(subset=['protocol id'], how='any')
+		df = df.dropna(subset=['energy'], how='any')
 
 		# The format is complicated for this field but seems to be that the date is
 		# always the first element and the machine is always the last regardless of
@@ -76,9 +117,16 @@ def Photon_Output_Graph(conn):
 		# but currently more effort than it's worth.
 		df.loc[:,'adate'] = pd.to_datetime(df.loc[:,'adate'], dayfirst=True)
 
-
+		# Drop any rows that aren't related to the Truebeams (ditches the old
+		# uneeded data). Might be possible to put this in the SQL query but
+		# difficult as machinename is embedded in the protocol ID.
 		df=df[df['machinename'].isin(['TrueBeam B', 'TrueBeam C', 'TrueBeam D',
 			'TrueBeam F'])]
+
+		# Drop any columns where there is no data (likely because of the
+		# dropping of the old linacs (e.g. data that used to be collected from
+		# them that is no longer collected for the Truebeams))
+		df = df.dropna(axis='columns', how='all')
 
 		return df
 
@@ -95,27 +143,34 @@ def Photon_Output_Graph(conn):
 
 
 
-
  	############################################################################
  	################ CREATE THE DATAFRAME FOR THE TOLERANCES ###################
 
-	# The purpose of this plot is generally to be as general as possible but
-	# there are only a few parameters that will have defined tolerances.
-	# Therefore the tolerance section can be a bit more specific and a dataframe
-	# containing tolereances can be manually created for many cases and
-	# extracted from the
-	#
-	# Create a dataframe of the things that need tolerances. The format of this
-	# should be the first line being the x_axis (with some values taken from the
-	# main dataframe to get the right formatting). The subsequent columns are
-	# the toleranced [low, high]. NB: column names should match those from the
-	# main dataframe.
-	df_tol1 = pd.DataFrame({'adate':[df['adate'].max(), df['adate'].max()],
-							'output':[98, 102],
-							'graph % diff in output':[-2, 2]})
+	# If you want to add tolerances change the boolean to True and construct the
+	# dataframe in the correct format.
+	tolerance_boolean = True
+	# The format of the dataframe should be the first line being the x_axis
+	# (with some values taken from the main dataframe to get the right
+	# formatting). The subsequent columns are the tolerances [low, high].
+	# NB: column names should match those from the main dataframe.
+	if tolerance_boolean == True:
+		df_tol1 = pd.DataFrame({'adate':[df['adate'].max(), df['adate'].max()],
+								'output':[98, 102],
+								'graph % diff in output':[-2, 2]})
 
 	############################################################################
 	############################################################################
+
+	############################################################################
+	############################################################################
+	'''
+
+	This is the end of the user input section. If you don't need to make any
+	other changes you can end here.
+
+	'''
+
+
 
 
 
@@ -124,25 +179,6 @@ def Photon_Output_Graph(conn):
 
  	############################################################################
  	################### CREATE THE COLUMNS FOR THE LEGEND ######################
-
-	# NB: The following section has been designed to be as general as possible
-	# but in reality it might be preferable to more manually choose the markers
-	# and colors based on optimising the most likey things to be plotted.
-	#
-	# Going to want to add a colour palette to the dataframe matched to a list
-	# of energies (i.e. each unique energy has a unique colour in a different
-	# column)
-
-
-	color_column = 'energy'
-	custom_color_boolean = True
-	custom_color_palette = ['#FF0000', 'black', 'yellow', 'purple', '#008F8F', '#FF00FF', 'white']
-	marker_column = 'machinename'
-	custom_marker_boolean = True
-	custom_marker_palette = [ 	'circle_x', 'square', 'square_x', 'diamond',
-								'hex', 'x', 'circle_cross',
-								'square_cross', 'diamond_cross', 'dash', 'cross',
-								'inverted_triangle', 'circle', 'triangle', 'asterisk']
 
 	(color_list, color_palette, marker_list, marker_palette, df,
 		add_legend_to_df) = Create_Legend(df, color_column,
@@ -160,51 +196,19 @@ def Photon_Output_Graph(conn):
  	############################################################################
  	################## FORMATTING AND CREATING A BASIC PLOT ####################
 
- 	############################################################################
- 	############################# USER INPUTS ##################################
-
-	# Decide what the default viewing option is going to be. (i.e. the fields to
-	# be plotted on the x and y axis when the graph is opened).
-	# NB: Have it set that if axis is 'adate' then will automatically update
-	# to plot datetime.
-
-	color_to_plot = ['6MV', '10MV']
-	marker_to_plot = ['TrueBeam B', 'TrueBeam C', 'TrueBeam D']
-	hover_tool_fields = ['chamber and electrometer', 'comments']
-	x_data1 = 'adate'
-	y_data1 = 'graph % diff in output'
-	plot_title1 = 'Photon Output Results'
-	x_axis_title1 = x_data1
-	y_axis_title1 = y_data1
-	plot_size_height1 = 450
-	plot_size_width1 = 800
-	legend_location = 'bottom_left'
-
-	list_plot_parameters = [	x_data1, y_data1,
-	 							plot_title1, x_axis_title1, y_axis_title1,
-								plot_size_height1, plot_size_width1,
-								legend_location		]
-
-	############################################################################
-	############################################################################
-
-
-
-
-
- 	############################################################################
- 	########################### CREATE THE PLOT ################################
-
+	######### Make Dataset:
 	# Run the Make_Dataset function to create two sub dataframs that the plots
 	# will be made from.
-	Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
-		marker_to_plot, x_data1, y_data1	)
+	Sub_df1 = Make_Dataset(df, color_column, color_to_plot, marker_column,
+		marker_to_plot, x_data1, y_data1)
 
 	# Make the ColumnDataSource (when making convert dataframe to a dictionary,
 	# which is helpful for the callback).
 	src1 = ColumnDataSource(Sub_df1.to_dict(orient='list'))
 
-	# Plot the actual data
+	######### Make Plot:
+	# Create an empty plot (plot parameters will be applied later in a way that
+	# can be manipulated in the callbacks)
 	p1 = figure()
 	p1.scatter(	source = src1,
 				x = 'x',
@@ -222,6 +226,8 @@ def Photon_Output_Graph(conn):
 	# Run the Define_Plot_Parameters function to set the plot parameters
 	Define_Plot_Parameters(p1, list_plot_parameters)
 
+	############################################################################
+	############################################################################
 
 
 
@@ -233,12 +239,14 @@ def Photon_Output_Graph(conn):
 	# We defined the tolerances further up and now want to add the correct ones
 	# to the plot. Done in such a way that they are updated with the callbacks
 	# later.
-	Sub_df1_tol1 = Make_Dataset_Tolerance(x_data1, y_data1, Sub_df1, df_tol1)
+	if tolerance_boolean == True:
 
-	src1_tol = ColumnDataSource(Sub_df1_tol1.to_dict(orient='list'))
+		Sub_df1_tol1 = Make_Dataset_Tolerance(x_data1, y_data1, Sub_df1, df_tol1)
 
-	p1.line(source = src1_tol, x = 'x', y = 'y_low', color = 'firebrick')
-	p1.line(source = src1_tol, x = 'x', y = 'y_high', color = 'firebrick')
+		src1_tol = ColumnDataSource(Sub_df1_tol1.to_dict(orient='list'))
+
+		p1.line(source = src1_tol, x = 'x', y = 'y_low', color = 'firebrick')
+		p1.line(source = src1_tol, x = 'x', y = 'y_high', color = 'firebrick')
 
 	############################################################################
 	############################################################################
@@ -270,6 +278,9 @@ def Photon_Output_Graph(conn):
 	Update_HoverTool(hover1, x_data1, y_data1, **kwargs)
 
 	p1.add_tools(hover1)
+
+	############################################################################
+	############################################################################
 
 
 
@@ -316,6 +327,10 @@ def Photon_Output_Graph(conn):
 	marker_title = Div(text='<b>Machine Choice</b>')
 	hover_title = Div(text='<b>Hovertool Fields</b>')
 
+	############################################################################
+	############################################################################
+
+
 
 
 
@@ -333,9 +348,12 @@ def Photon_Output_Graph(conn):
 	button_row = row([update_button, range_button])
 
 	layout_plots = column([	button_row, select_xaxis, select_yaxis,
-							select_legend,p1	])
+							select_legend,p1])
 
 	tab_layout = row([layout_plots, layout_checkbox])
+
+	############################################################################
+	############################################################################
 
 
 
@@ -344,9 +362,8 @@ def Photon_Output_Graph(conn):
  	############################################################################
  	####################### CREATE CALLBACK FUNCTIONS ##########################
 
-	######## 1)
-	#
-	# Create a big callback that does everything?
+
+	# Create a big callback that does most stuff
 	def callback(attr, old, new):
 
 		# Want to acquire the current values of all of the checkboxes and select
@@ -378,7 +395,6 @@ def Photon_Output_Graph(conn):
 	 		plot_title1, x_axis_title1, y_axis_title1, plot_size_height1,
 			plot_size_width1, legend_location])
 
-
 		# Update the hovertool
 		if len(hovertool_to_plot) < 11:
 			kwargs = {}
@@ -391,137 +407,57 @@ def Photon_Output_Graph(conn):
 			msgbox('Too many fields selected to display on HoverTool ' \
 				'(Max = 10). Please reduce number of fields selected')
 
-		# Use the pre-defined Make_Dataset_Tolerance function with these new
-		# inputs to update the tolerances.
-		Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
-			plot1_ydata_to_plot, Sub_df1, df_tol1)
-
 		Update_HoverTool(hover1, plot1_xdata_to_plot, plot1_ydata_to_plot,
 			**kwargs)
 
+		# Use the pre-defined Make_Dataset_Tolerance function with these new
+		# inputs to update the tolerances.
+		if tolerance_boolean == True:
+			Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
+				plot1_ydata_to_plot, Sub_df1, df_tol1)
+
 		# Update the ColumnDataSources.
 		src1.data = Sub_df1.to_dict(orient='list')
-		src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
+		if tolerance_boolean == True:
+			src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
 
 		return
 
+	select_xaxis.on_change('value', callback)
+	select_yaxis.on_change('value', callback)
+	select_legend.on_change('value', callback)
 	checkbox_color.on_change('active', callback)
 	checkbox_marker.on_change('active', callback)
 	checkbox_hovertool.on_change('active', callback)
 
 
 
-
-	def callback_legend(attr, old, new):
-
-		plot1_xdata_to_plot = select_xaxis.value
-		plot1_ydata_to_plot = select_yaxis.value
-		legend_location = select_legend.value
-		# Set the new axis titles
-		x_axis_title1 = plot1_xdata_to_plot
-		y_axis_title1 = plot1_ydata_to_plot
-
-		Define_Plot_Parameters(p1, [plot1_xdata_to_plot, plot1_ydata_to_plot,
-	 		plot_title1, x_axis_title1, y_axis_title1, plot_size_height1,
-			plot_size_width1, legend_location])
-
-		return
-
-	select_legend.on_change('value', callback_legend)
-
-
-
-
-
-	def callback_axis(attr, old, new):
-
-		# Want to acquire the current values of all of the checkboxes and select
-		# widgets to provide as inputs for the re-plot.
-		color_to_plot = [	checkbox_color.labels[i] for i in
-							checkbox_color.active]
-		if color_column != marker_column:
-			marker_to_plot = [	checkbox_marker.labels[i] for i in
-								checkbox_marker.active]
-		else:
-			marker_to_plot = color_to_plot
-		hovertool_to_plot = [	checkbox_hovertool.labels[i] for i in
-								checkbox_hovertool.active]
-		plot1_xdata_to_plot = select_xaxis.value
-		plot1_ydata_to_plot = select_yaxis.value
-		legend_location = select_legend.value
-		# Set the new axis titles
-		x_axis_title1 = plot1_xdata_to_plot
-		y_axis_title1 = plot1_ydata_to_plot
-
-		# Use the pre-defined Make_Dataset function with these new inputs to
-		# create new versions of the sub dataframes.
-		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
-			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
-
-		# Use the pre-defined Define_Plot_Parameters function with these new
-		# inputs to update the plot.
-		Define_Plot_Parameters(p1, [plot1_xdata_to_plot, plot1_ydata_to_plot,
-	 		plot_title1, x_axis_title1, y_axis_title1, plot_size_height1,
-			plot_size_width1, legend_location])
-
-		# Update the hovertool
-		if len(hovertool_to_plot) < 11:
-			kwargs = {}
-			i = 0
-			for x in hovertool_to_plot:
-				i = i+1
-				kwargs['Field'+str(i)] = x
-		else:
-			kwargs = {}
-			msgbox('Too many fields selected to display on HoverTool ' \
-				'(Max = 10). Please reduce number of fields selected')
-
-		Update_HoverTool(hover1, plot1_xdata_to_plot, plot1_ydata_to_plot,
-			**kwargs)
-
-		# Use the pre-defined Make_Dataset_Tolerance function with these new
-		# inputs to update the tolerances.
-		Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
-			plot1_ydata_to_plot, Sub_df1, df_tol1)
-
-		# Update the ColumnDataSources.
-		src1.data = Sub_df1.to_dict(orient='list')
-		src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
-
-		return
-
-	# Use the on_change function to call the callback_axis when a new value is
-	# selected by the select_axis widget.
-	select_xaxis.on_change('value', callback_axis)
-	select_yaxis.on_change('value', callback_axis)
-
-
-
+	# Callback for the Update Button
 	def callback_update():
 
+		# Make a new version of the dataframe using the original Create_df
+		# function that connects to the database.
 		df = Create_df()
-		print(df)
 		df = add_legend_to_df(df)
 
-		# Want to acquire the current values of all of the checkboxes and select
-		# widgets to provide as inputs for the re-plot.
-		color_to_plot = [	checkbox_color.labels[i] for i in
-							checkbox_color.active]
-		marker_to_plot = [	checkbox_marker.labels[i] for i in
-								checkbox_marker.active]
+		color_to_plot = [checkbox_color.labels[i] for i in
+			checkbox_color.active]
+		if color_column != marker_column:
+			marker_to_plot = [checkbox_marker.labels[i] for i in
+				checkbox_marker.active]
+		else:
+			marker_to_plot = color_to_plot
+		hovertool_to_plot = [checkbox_hovertool.labels[i] for i in
+			checkbox_hovertool.active]
 		plot1_xdata_to_plot = select_xaxis.value
 		plot1_ydata_to_plot = select_yaxis.value
 		x_axis_title1 = plot1_xdata_to_plot
 		y_axis_title1 = plot1_ydata_to_plot
 		legend_location = select_legend.value
 
-		# Use the pre-defined Make_Dataset function with these new inputs to
-		# create new versions of the sub dataframes.
 		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
 			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
 
-		# Use the pre-defined Define_Plot_Parameters function with these new
-		# inputs to update the plot.
 		Define_Plot_Parameters(p1, [plot1_xdata_to_plot, plot1_ydata_to_plot,
 	 		plot_title1, x_axis_title1, y_axis_title1, plot_size_height1,
 			plot_size_width1, legend_location])
@@ -540,15 +476,12 @@ def Photon_Output_Graph(conn):
 		Update_HoverTool(hover1, plot1_xdata_to_plot, plot1_ydata_to_plot,
 			**kwargs)
 
-		# Use the pre-defined tolerances function with these new inputs to
-		# update the tolerances.
-		Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
-			plot1_ydata_to_plot, Sub_df1, df_tol1)
+		if tolerance_boolean == True:
+			Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
+				plot1_ydata_to_plot, Sub_df1, df_tol1)
+			src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
 
-
-		# Update the ColumnDataSources.
 		src1.data = Sub_df1.to_dict(orient='list')
-		src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
 
 		return
 
@@ -556,7 +489,7 @@ def Photon_Output_Graph(conn):
 
 
 
-
+	# Callback for the Range Button
 	def callback_range():
 
 		x_data1 = select_xaxis.value
@@ -566,7 +499,7 @@ def Photon_Output_Graph(conn):
 			or (y_data1 == 'output')):
 
 			p1.x_range.start = Sub_df1['x'].max() - timedelta(weeks=53)
-			p1.x_range.end = Sub_df1['x'].max() + timedelta(weeks=1)
+			p1.x_range.end = Sub_df1['x'].max() + timedelta(weeks=2)
 
 			if y_data1 == 'output':
 				p1.y_range.start = 97
@@ -575,30 +508,26 @@ def Photon_Output_Graph(conn):
 				p1.y_range.start = -3
 				p1.y_range.end = 3
 
-		print(p1.x_range.start)
-		print(p1.x_range.end)
-		print(p1.y_range.start)
-		print(p1.y_range.end)
-
 		return
 
 	range_button.on_click(callback_range)
+
+
+	############################################################################
+	############################################################################
 
 
 
 	############################################################################
  	####################### RETURN TO THE MAIN SCRIPT ##########################
 
-	# Now that the script is finished and the plot created we can return to the
-	# main script.
-	#
-	# To pass back the data for the tab we need to return a Panel with:
-	# 	child = layout (the one that we made earlier with the widget and plot)
-	# 	title = 'Something that makes sense as a tab label for the user'
-
 	return Panel(child = tab_layout, title = 'Photon Output')
 
+	############################################################################
+	############################################################################
 
+################################################################################
+################################################################################
 
 
 

@@ -55,8 +55,8 @@ from bokeh.models.widgets import Tabs
 # there is an empty file called __init__.py in the scripts folder).
 from scripts.GulmayOutput import Gulmay_Output_Graph
 from scripts.PhotonOutput import Photon_Output_Graph
+from scripts.ElectronEnergyOld import Electron_Energy_Graph_Old
 from scripts.ElectronEnergy import Electron_Energy_Graph
-from scripts.ElectronEnergy2 import Electron_Energy_Graph2
 from scripts.JawTravel import JawTravel
 
 # Import pypyodbc as this is how conections to the database can be achieved.
@@ -142,7 +142,7 @@ def produce_doc(doc):
     if choice == 'TrueBeam':
         # Create each tab by running the relevant scripts
         tab1 = Photon_Output_Graph(conn)
-        tab2 = Electron_Energy_Graph(conn)
+        tab2 = Electron_Energy_Graph_Old(conn)
         tab3 = JawTravel(conn)
         # Put all the tabs into one application
         tabs = Tabs(tabs = [tab1, tab2, tab3])
@@ -151,7 +151,7 @@ def produce_doc(doc):
         tab2 = Electron_Energy_Graph(conn)
         tab3 = Gulmay_Output_Graph(conn)
         tab4 = JawTravel(conn)
-        tab5 = Electron_Energy_Graph2(conn)
+        tab5 = Electron_Energy_Graph_Old(conn)
         # Put all the tabs into one application
         tabs = Tabs(tabs = [tab1, tab2, tab3, tab4, tab5])
     elif choice == 'Gulmay':
