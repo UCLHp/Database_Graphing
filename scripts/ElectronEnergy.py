@@ -508,6 +508,23 @@ def Electron_Energy_Graph(conn):
 	# Callback for the Range Button
 	def callback_range():
 
+		color_to_plot = [	checkbox_color.labels[i] for i in
+							checkbox_color.active]
+		if color_column != marker_column:
+			marker_to_plot = [	checkbox_marker.labels[i] for i in
+								checkbox_marker.active]
+		else:
+			marker_to_plot = color_to_plot
+		plot1_xdata_to_plot = select_xaxis.value
+		plot1_ydata_to_plot = select_yaxis.value
+
+		# Use the pre-defined Make_Dataset function with these new inputs to
+		# create new versions of the sub dataframes.
+		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
+			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
+
+
+
 		x_data1 = select_xaxis.value
 		y_data1 = select_yaxis.value
 

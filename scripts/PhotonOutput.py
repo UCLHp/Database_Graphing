@@ -158,6 +158,59 @@ def Photon_Output_Graph(conn):
 								'output':[98, 102],
 								'graph % diff in output':[-2, 2]})
 
+		# Added a seperate qi tolerance as multiple energes can appear
+		# simultaneously so need an special tolerance function to deal with
+		# this.
+		df_tol1_qi = pd.DataFrame({	'adate':[df['adate'].max(), df['adate'].max()],
+									'qi_6MV':[0.64, 0.68],
+									'qi_6XFFF':[0.61, 0.65],
+									'qi_10MV':[0.71, 0.75],
+									'qi_10XFFF':[0.68, 0.72]})
+
+		def special_tolerance(color_to_plot, x_data1, y_data1, Sub_df1, df_tol1_qi):
+
+			energy_list = ['6MV', '6XFFF', '10MV', '10XFFF']
+			data = {}
+
+			if (x_data1 != 'adate') or (y_data1 != 'qi'):
+				for x in range(0, len(energy_list)):
+					data.update({'x_' + energy_list[x]: [Sub_df1['x'].max(),
+								Sub_df1['x'].max()],
+							'y_low_' + energy_list[x]: [Sub_df1['y'].max(),
+								Sub_df1['y'].max()],
+							'y_high_' + energy_list[x]: [Sub_df1['y'].max(),
+								Sub_df1['y'].max()]})
+			else:
+				# Get a list of the column headers
+				headers1 = df_tol1_qi.columns.values.tolist()
+				# Check if the xdata is what is in the df_tol1 as the x_axis (if not no
+				# point plotting tolerances as all tolerances are vs this column).
+				max_x = Sub_df1['x'].max() + pd.DateOffset(weeks = 2)
+				min_x = Sub_df1['x'].min() + pd.DateOffset(weeks = -2)
+
+				for x in range(0, len(energy_list)):
+					if energy_list[x] in color_to_plot:
+						data.update({'x_' + energy_list[x]: [min_x, max_x],
+								'y_low_' + energy_list[x]:
+									[df_tol1_qi['qi_' + energy_list[x]][0],
+									df_tol1_qi['qi_' + energy_list[x]][0]],
+								'y_high_' + energy_list[x]:
+									[df_tol1_qi['qi_' + energy_list[x]][1],
+									df_tol1_qi['qi_' + energy_list[x]][1]]})
+					else:
+						data.update({'x_' + energy_list[x]: [Sub_df1['x'].max(),
+									Sub_df1['x'].max()],
+								'y_low_' + energy_list[x]: [Sub_df1['y'].max(),
+									Sub_df1['y'].max()],
+								'y_high_' + energy_list[x]: [Sub_df1['y'].max(),
+									Sub_df1['y'].max()]})
+
+			Sub_df1_tol1_qi = pd.DataFrame(data)
+
+			return Sub_df1_tol1_qi
+
+
+
 	############################################################################
 	############################################################################
 
@@ -247,6 +300,21 @@ def Photon_Output_Graph(conn):
 
 		p1.line(source = src1_tol, x = 'x', y = 'y_low', color = 'firebrick')
 		p1.line(source = src1_tol, x = 'x', y = 'y_high', color = 'firebrick')
+
+
+		Sub_df1_tol1_qi = special_tolerance(color_to_plot, x_data1, y_data1,
+			Sub_df1, df_tol1_qi)
+
+		src1_tol_qi = ColumnDataSource(Sub_df1_tol1_qi.to_dict(orient='list'))
+
+		p1.line(source = src1_tol_qi, x = 'x_6MV', y = 'y_low_6MV', color = 'yellow')
+		p1.line(source = src1_tol_qi, x = 'x_6MV', y = 'y_high_6MV', color = 'yellow')
+		p1.line(source = src1_tol_qi, x = 'x_6XFFF', y = 'y_low_6XFFF', color = 'mediumorchid')
+		p1.line(source = src1_tol_qi, x = 'x_6XFFF', y = 'y_high_6XFFF', color = 'mediumorchid')
+		p1.line(source = src1_tol_qi, x = 'x_10MV', y = 'y_low_10MV', color = 'firebrick')
+		p1.line(source = src1_tol_qi, x = 'x_10MV', y = 'y_high_10MV', color = 'firebrick')
+		p1.line(source = src1_tol_qi, x = 'x_10XFFF', y = 'y_low_10XFFF', color = 'black')
+		p1.line(source = src1_tol_qi, x = 'x_10XFFF', y = 'y_high_10XFFF', color = 'black')
 
 	############################################################################
 	############################################################################
@@ -415,11 +483,14 @@ def Photon_Output_Graph(conn):
 		if tolerance_boolean == True:
 			Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
 				plot1_ydata_to_plot, Sub_df1, df_tol1)
+			Sub_df1_tol1_qi = special_tolerance(color_to_plot,
+				plot1_xdata_to_plot, plot1_ydata_to_plot, Sub_df1, df_tol1_qi)
 
 		# Update the ColumnDataSources.
 		src1.data = Sub_df1.to_dict(orient='list')
 		if tolerance_boolean == True:
 			src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
+			src1_tol_qi.data = Sub_df1_tol1_qi.to_dict(orient='list')
 
 		return
 
@@ -479,7 +550,10 @@ def Photon_Output_Graph(conn):
 		if tolerance_boolean == True:
 			Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
 				plot1_ydata_to_plot, Sub_df1, df_tol1)
+			Sub_df1_tol1_qi = special_tolerance(color_to_plot,
+				plot1_xdata_to_plot, plot1_ydata_to_plot, Sub_df1, df_tol1_qi)
 			src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
+			src1_tol_qi.data = Sub_df1_tol1_qi.to_dict(orient='list')
 
 		src1.data = Sub_df1.to_dict(orient='list')
 
@@ -492,22 +566,36 @@ def Photon_Output_Graph(conn):
 	# Callback for the Range Button
 	def callback_range():
 
-		x_data1 = select_xaxis.value
-		y_data1 = select_yaxis.value
+		color_to_plot = [	checkbox_color.labels[i] for i in
+							checkbox_color.active]
+		if color_column != marker_column:
+			marker_to_plot = [	checkbox_marker.labels[i] for i in
+								checkbox_marker.active]
+		else:
+			marker_to_plot = color_to_plot
+		plot1_xdata_to_plot = select_xaxis.value
+		plot1_ydata_to_plot = select_yaxis.value
 
-		if (x_data1 == 'adate') and ((y_data1 == 'graph % diff in output')
-			or (y_data1 == 'output')):
+		# Use the pre-defined Make_Dataset function with these new inputs to
+		# create new versions of the sub dataframes.
+		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
+			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
+
+		if (plot1_xdata_to_plot == 'adate') and ((plot1_ydata_to_plot == 'graph % diff in output')
+			or (plot1_ydata_to_plot == 'output') or plot1_ydata_to_plot =='qi'):
 
 			p1.x_range.start = Sub_df1['x'].max() - timedelta(weeks=53)
 			p1.x_range.end = Sub_df1['x'].max() + timedelta(weeks=2)
 
-			if y_data1 == 'output':
+			if plot1_ydata_to_plot == 'output':
 				p1.y_range.start = 97
 				p1.y_range.end = 103
-			elif y_data1 == 'graph % diff in output':
+			elif plot1_ydata_to_plot == 'graph % diff in output':
 				p1.y_range.start = -3
 				p1.y_range.end = 3
-
+			elif plot1_ydata_to_plot =='qi':
+				p1.y_range.start = 0.55
+				p1.y_range.end = 0.8
 		return
 
 	range_button.on_click(callback_range)
