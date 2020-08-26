@@ -43,7 +43,7 @@ from scripts.Universal import (	Create_Select_Axis, Create_Select_Legend,
 ################################################################################
 ################################ START OF CODE #################################
 
-def Gulmay_Output_Graph(conn):
+def Flexitron_Output_Graph(conn):
 
 	output_file("PDD_Graph.html") #????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
 
@@ -78,12 +78,12 @@ def Gulmay_Output_Graph(conn):
 	# Decide on what data to plot on the x/y axis when opened (enter the field
 	# names here)
 	x_data1 = 'adate'
-	y_data1 = 'output'
+	y_data1 = 'graph % difference'
 	# Decide what the plot formatting will be, inluding the plot title, axis
 	# titles and the size of the plot. A good generic start point is to use the
 	# field names as the axis titles but future plots could potentially use a
 	# look up table to give more user friendly titles.
-	plot_title1 = 'Gulmay Output'
+	plot_title1 = 'Flexitron Output'
 	x_axis_title1 = x_data1
 	y_axis_title1 = y_data1
 	plot_size_height1 = 450
@@ -92,7 +92,7 @@ def Gulmay_Output_Graph(conn):
 	# Set the fields that will display in the hovertool in addition to the x and
 	# y fields (NB: Can have a maximum of 10 options here). (Useful example
 	# defaults would be the comments field or maybe chamber/electrometer?)
-	hover_tool_fields = ['comments', 'input by', 'checked by']
+	hover_tool_fields = ['comments']
 	# Create a list of the plot parameters that will be used as input to a
 	# function later.
 	list_plot_parameters = [x_data1, y_data1, plot_title1, x_axis_title1,
@@ -105,19 +105,18 @@ def Gulmay_Output_Graph(conn):
 	# boolean to True and then set the palette to the color and marker palettes
 	# that you want (they will be mapped against a 'sorted' list of the unique
 	# values from the fields).
-	color_column = 'energy'
+	color_column = 'machinename'
 	custom_color_boolean = False
 	custom_color_palette = []
-	marker_column = 'energy'
+	marker_column = 'well chamber'
 	custom_marker_boolean = False
 	custom_marker_palette = []
 	# From the legend defined above give the values that will be pre-ticked when
 	# the plot is opened. NB: Bokeh will throw an error if one of these lists is
 	# empty (i.e. =[]) If only using color or marker then set the color_to plot
 	# and then enter the command:  color_to_plot = marker_to_plot.
-	# color_to_plot = ['Gulmay']
-	marker_to_plot = ['100 kV', '150 kV', '220 kV']
-	color_to_plot = marker_to_plot
+	color_to_plot = ['Flexitron']
+	marker_to_plot = ['A961212', 'A103503']
 
 	############################################################################
 	#################### CREATE THE DATA FOR THE GRAPH #########################
@@ -128,22 +127,22 @@ def Gulmay_Output_Graph(conn):
 
 		# Use the connection passed to the function to read the data into a
 		# dataframe via an SQL query.
-		df = pd.read_sql('select [gulmay session ID], [output], ' \
-			'[chamber and electrometer], [Chamber factor], [Dose rate], ' \
-			'[energy], [T/P factor], [Temp], [Press], [Comments], ' \
-			'[Input by], [Checked by] from [gulmay output]', conn)
+		df = pd.read_sql('select [msel session ID], [well chamber], ' \
+			'[Graph % Difference], [Temp], [Press], [T/P Factor], ' \
+			'[max position], [Comments], [Input by], [Checked by], ' \
+			'[electrometer] from [msel output Graph]', conn)
 
 		# Delete empty rows where the data is very important to have
-		df = df.dropna(subset=['gulmay session id'])
-		df = df.dropna(subset=['energy'])
+		df = df.dropna(subset=['msel session id'])
+		df = df.dropna(subset=['well chamber'])
 
 		# The format is complicated for this field but seems to be that the date is
 		# always the first element and the machine is always the last regardless of
 		# how many elements there are.
 		# Seperate on the first '_'
-		df_left = df['gulmay session id'].str.partition(sep = '_')
+		df_left = df['msel session id'].str.partition(sep = '_')
 		# Seperate on the last '_'
-		df_right = df['gulmay session id'].str.rpartition(sep = '_')
+		df_right = df['msel session id'].str.rpartition(sep = '_')
 		# From these sperated dataframes add the appropriate columns back into
 		# the main dataframe.
 		df.loc[:,'adate'] = df_left[0]
@@ -182,7 +181,9 @@ def Gulmay_Output_Graph(conn):
 	# NB: column names should match those from the main dataframe.
 	if tolerance_boolean == True:
 		df_tol1 = pd.DataFrame({'adate':[df['adate'].max(), df['adate'].max()],
-								'output':[97, +103]})
+								'graph % difference':[-3, +3],
+								'max position':[350, 360]})
+
 	############################################################################
 	############################################################################
 
@@ -240,8 +241,10 @@ def Gulmay_Output_Graph(conn):
 	p1.scatter(	source = src1,
 				x = 'x',
 				y = 'y',
+
 				fill_alpha = 0.4,
 				size = 12,
+
 				# NB: Always use legend_field for this not legend_group as the
 				# former acts on the javascript side but the latter the Python
 				# side. Therefore the former will update automatically.
@@ -360,8 +363,8 @@ def Gulmay_Output_Graph(conn):
 
 	######## 7)
 	# Make some titles for the checkboxes
-	color_title = Div(text='<b>Energy</b>')
-	marker_title = Div(text='<b>Energ</b>')
+	color_title = Div(text='<b>Machine Choice</b>')
+	marker_title = Div(text='<b>Well Chamber</b>')
 	hover_title = Div(text='<b>Hovertool Fields</b>')
 
 	############################################################################
@@ -544,14 +547,18 @@ def Gulmay_Output_Graph(conn):
 		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
 			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
 
-		if (plot1_xdata_to_plot == 'adate') and (plot1_ydata_to_plot == 'output'):
+		if (plot1_xdata_to_plot == 'adate') and (
+			(plot1_ydata_to_plot == 'graph % difference') or (plot1_ydata_to_plot == 'max position')):
 
 			p1.x_range.start = Sub_df1['x'].max() - timedelta(weeks=53)
 			p1.x_range.end = Sub_df1['x'].max() + timedelta(weeks=2)
 
-			if plot1_ydata_to_plot == 'output':
-				p1.y_range.start = 95
-				p1.y_range.end = 105
+			if plot1_ydata_to_plot == 'graph % difference':
+				p1.y_range.start = -5
+				p1.y_range.end = 5
+			if plot1_ydata_to_plot == 'max position':
+				p1.y_range.start = 345
+				p1.y_range.end = 365
 
 		return
 
@@ -565,7 +572,7 @@ def Gulmay_Output_Graph(conn):
  	############################################################################
  	####################### RETURN TO THE MAIN SCRIPT ##########################
 
-	return Panel(child = tab_layout, title = 'Gulmay Output')
+	return Panel(child = tab_layout, title = 'Flexitron Output')
 
 	############################################################################
 	############################################################################

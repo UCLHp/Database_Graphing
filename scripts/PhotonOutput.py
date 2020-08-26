@@ -33,6 +33,15 @@ from scripts.Universal import (	Create_Select_Axis, Create_Select_Legend,
 								Make_Dataset_Tolerance,
 								Create_Checkbox_HoverTool)
 
+################################################################################
+################################################################################
+
+
+
+
+
+################################################################################
+################################ START OF CODE #################################
 
 def Photon_Output_Graph(conn):
 
@@ -108,13 +117,7 @@ def Photon_Output_Graph(conn):
 		# main dataframe.
 		df.loc[:,'adate'] = df_left[0]
 		df.loc[:,'machinename'] = df_right[2]
-		# Turn 'adate' into datetime. An annoying factor in the database is a
-		# few entries with a different datetime format. In combination with the
-		# dayfirst=True parameter to override the American date default the
-		# to_datetime function seems to solve this. NB: Might be a little slow
-		# without feeding it a specific format but unlikely to be an issue given
-		# relatively small datasets. Possibly someway to feed multiple formats
-		# but currently more effort than it's worth.
+		# Turn 'adate' into datetime.
 		df.loc[:,'adate'] = pd.to_datetime(df.loc[:,'adate'], dayfirst=True)
 
 		# Drop any rows that aren't related to the Truebeams (ditches the old
