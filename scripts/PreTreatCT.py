@@ -1,18 +1,20 @@
 import pandas as pd
 import numpy as np
 
+# datetime for setting up DateRangeSlider with generic values
 from datetime import date
 
+# functions from bokeh
 from bokeh.plotting import figure
 from bokeh.models import (CategoricalColorMapper, HoverTool, BoxZoomTool,
-                          ColumnDataSource, Panel,
-                          FuncTickFormatter, SingleIntervalTicker, LinearAxis,
-                          CustomJS, DatetimeTickFormatter, BasicTickFormatter,
-                          NumeralTickFormatter)
+						  ColumnDataSource, Panel,
+						  FuncTickFormatter, SingleIntervalTicker, LinearAxis,
+						  CustomJS, DatetimeTickFormatter, BasicTickFormatter,
+						  NumeralTickFormatter)
 from bokeh.models.widgets import (CheckboxGroup, Slider, RangeSlider,
-                                  Tabs, CheckboxButtonGroup, Dropdown,
-                                  TableColumn, DataTable, Select,
-                                  DateRangeSlider)
+								  Tabs, CheckboxButtonGroup, Dropdown,
+								  TableColumn, DataTable, Select,
+								  DateRangeSlider)
 from bokeh.layouts import column, row, WidgetBox, layout
 from bokeh.palettes import Category20_16, turbo, Colorblind
 import bokeh.colors
@@ -20,48 +22,172 @@ from bokeh.io import output_file, show
 from bokeh.transform import factor_cmap, factor_mark
 
 
-def mri_coils(conn):
-    '''
-    In order to make a simple plot easy to create we're going to define all of
-    the user inputs up front. Then pull the data out of the database and
-    add a simple tolerance dataframe if necessary.
+# Create the function that will plot the data from this table/graph.
+def pretreat_ct(conn):
+	'''
+	In order to make a simple plot easy to create we're going to define all of
+	the user inputs up front. Then pull the data out of the database and
+	add a simple tolerance dataframe if necessary.
 
-    For a first plot this may be all that is needed but to make a more complex
-    plot the writer may need to add details further down.
+	For a first plot this may be all that is needed but to make a more complex
+	plot the writer may need to add details further down.
 
-    Remember that:
-        *	The dataframe will not have capital letters in the field names due
-            to a quirk of the read_sql function.
-        *	The date field MUST be called 'adate' and of the format 'datetime'
-            in order for parts of the code to function correctly
-    '''
-    df = pd.read_sql('select * from [MRI_Coils_Check]', conn)
-    x_data1 = 'ADate'
-    y_data1 = 'SNR'
-    plot_title1 = 'MRI Coil QA'
-    x_axis_title1 = x_data1
-    y_axis_title1 = y_data1
-    plot_size_height1 = 450
-    plot_size_width1 = 800
-    legend_location = 'bottom_left'
+	Remember that:
+		*	The dataframe will not have capital letters in the field names due
+			to a quirk of the read_sql function.
+		*	The date field MUST be called 'adate' and of the format 'datetime'
+			in order for parts of the code to function correctly
 
-    hover_tool_fields = ['ADate', 'SNR', 'SNR_std']
+	'''
 
-    list_plot_parameters = [x_data1, y_data1, plot_title1, x_axis_title1,
-                            y_axis_title1, plot_size_height1, plot_size_width1,
-                            legend_location]
+	############################################################################
+	############################################################################
 
-    color_column = 'Coil'
-    custom_color_boolean = False
-    custom_color_palette = []
-    marker_column = 'MachineName'
-    custom_marker_boolean = False
-    custom_marker_palette = []
-    color_to_plot = ['Head1']
-    marker_to_plot = ['MRI1']
+	############################################################################
+ 	############################# USER INPUTS ##################################
 
+	# Decide what the default viewing option is going to be. (i.e. the fields to
+	# be plotted on the x and y axis when the graph is opened, the plot size
+	# etc.).
+	#
+	# Decide on what data to plot on the x/y axis when opened (enter the field
+	# names here)
+	x_data1 = 'field_name x'
+	y_data1 = 'field_name y'
+	# Decide what the plot formatting will be, inluding the plot title, axis
+	# titles and the size of the plot. A good generic start point is to use the
+	# field names as the axis titles but future plots could potentially use a
+	# look up table to give more user friendly titles.
+	plot_title1 = 'Title of the Plot'
+	x_axis_title1 = x_data1
+	y_axis_title1 = y_data1
+	plot_size_height1 = 450
+	plot_size_width1 = 800
+	legend_location = 'bottom_left'
+	# Set the fields that will display in the hovertool in addition to the x and
+	# y fields (NB: Can have a maximum of 10 options here). (Useful example
+	# defaults would be the comments field or maybe chamber/electrometer?)
+	hover_tool_fields = ['option1', 'option2']
+	# Create a list of the plot parameters that will be used as input to a
+	# function later.
+	list_plot_parameters = [x_data1, y_data1, plot_title1, x_axis_title1,
+		y_axis_title1, plot_size_height1, plot_size_width1, legend_location]
 
-    df_fields = (list(df.columns))
+	# Define the fields that the legend will be based off. If there is only
+	# one field then put it in both columns.
+	#
+	# If the default options in the function are not acceptable then change the
+	# boolean to True and then set the palette to the color and marker palettes
+	# that you want (they will be mapped against a 'sorted' list of the unique
+	# values from the fields).
+	color_column = 'field that the colors will be based off'
+	custom_color_boolean = False
+	custom_color_palette = []
+	marker_column = 'field that the markers will be based off'
+	custom_marker_boolean = False
+	custom_marker_palette = []
+	# From the legend defined above give the values that will be pre-ticked when
+	# the plot is opened. NB: Bokeh will throw an error if one of these lists is
+	# empty (i.e. =[]) If only using color or marker then set the color_to plot
+	# and then enter the command:  color_to_plot = marker_to_plot.
+	color_to_plot = ['option1', 'option2']
+	marker_to_plot = ['option1', 'option2', 'option3']
+
+	############################################################################
+	#################### CREATE THE DATA FOR THE GRAPH #########################
+
+	# Do this in a function so it can be used in an update callback later
+
+	def Create_df():
+
+		# Use the connection passed to the function to read the data into a
+		# dataframe via an SQL query.This is a key part of the function so some
+		# time will be taken to explain some key points and known errors:
+		#
+		# Key Points:
+		#
+		# 	The SQL query is entered into this function as a string using SQL
+		# 	syntax.
+		#
+		# 	The SQL query can pull data either from tables or from queries
+		# 	(queries are preferable (see known errors below))
+		#
+		# Known Errors/Bugs:
+		#
+		# 	'read_SQL' sets the column names the same as the Access Database but
+		# 	removes capital letters (i.e. Field_Name ---> field_name).
+		#
+		# 	MS Access does not support the full range of SQL functons and so
+		# 	when writing complex queries syntax errors may be due to this.
+		#
+		# 	MS Access handles calculated fields in a way that sometimes results
+		# 	in values being saved in scientific notation. The read_SQL function
+		# 	is unable to read this as it gets confused by the 'E-/+' string
+		# 	within a numeric field. The workaround is to create a query where
+		# 	the data can be	more easily manipulated and to add an expression
+		# 	field with the format:
+		#	'IIf(IsNull([FieldName]),Null,Round(CDbl([FieldName]),(Decimal)))'.
+		# 	This forces the field to a double and then rounds to a number of
+		# 	decimal places (can choose big number to keep plotting accurate),
+		# 	unless the field is blank, in which case it returns blank.
+		#
+		df = pd.read_sql(	'select [Field Name 1], [Field Name 2] ' \
+			'from [PDD Results]', conn)
+
+		# When starting a new graph can be useful to print the dataframe to get
+		# an understanding of what data is being pulled from the database. There
+		# are ways to force pandas to print dataframes with more columns/rows if
+		# needed as the default often doesn't display the full dataframe if it's
+		# large.
+		print(df)
+		# Also print the data type of the dataframe columns.
+    	print(df.dtypes)
+
+		# Some manipulation may be needed as there are sometimes cells with
+		# empty fields such as the date, where the data is relatively
+		# meeningless without this field, and where empty fields may conflict
+		# with later functions (e.g. trying to create a legend).(NB: This works
+		# for truly empty (i.e. Null) but may not work for empty strings)
+		df = df.dropna(subset=['other necessary fields'])
+		df = df.dropna(subset=['other necessary fields'])
+
+		# With any luck this bit can be removed after chatting to AW and MB ?????????????????????????????????????????????????????????????????????????????????
+		#
+		# For the photon database some manipulation will be needed to extract
+		# the date and machine name from the 'id' fields. Typically taking the
+		# string from before the first seperator and the string from after the
+		# last. But this should be checked whenever plotting from a new table.
+		# Seperate on the first '_'
+		df_left = df['protocol id'].str.partition(sep = '_')
+		# Seperate on the last '_'
+		df_right = df['protocol id'].str.rpartition(sep = '_')
+		# From these sperated dataframes add the appropriate columns back into
+		# the main dataframe.
+		df.loc[:,'adate'] = df_left[0]
+		df.loc[:,'machinename'] = df_right[2]
+
+		# Turn 'adate' into datetime. Problems with this function as it assumes american date formats over british. ?????????????????????????????????????????????????????????????????????????????????
+		# Talk to AW and MB about getting date from other tables in the database and pulling them into the query. ???????????????????????????????????????????????????????????????????????????????????
+		# This way the date should be in a set format that the datetime function can be told, which should resolve this issue. ??????????????????????????????????????????????????????????????????????
+		#
+		# Need to turn the date fields into a Dateime object (either 'adate'
+		# (protons) or the newly created 'adate' (photons)). The date field
+		# should always be named 'adate' for consistency and the function of the
+		# rest of the code.
+		df.loc[:,'adate'] = pd.to_datetime(df.loc[:,'adate'])
+
+		# When starting a new graph can be useful to print the dataframe after
+		# any manipulations to make sure the code has done what you expected.
+		print(df)
+
+		return df
+
+	df = Create_df()
+
+	# Create a list of the fields using the dataframe. By doing it now before
+	# the extra legend fields are added it's easy to limit what is displayed in
+	# the select widgets.
+	TableFields = (list(df.columns))
 
  	############################################################################
  	################ CREATE THE DATAFRAME FOR THE TOLERANCES ###################

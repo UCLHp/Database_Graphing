@@ -53,7 +53,9 @@ def db_connect(DATABASE_DIR, *, pswrd=''):
 conn = db_connect(DATABASE_DIR)
 
 df = pd.read_sql('select * from [MRI_Coils_Check]', conn)
-
+print(df)
+coils = list(df['coil'].unique())
+print(coils)
 coil_selection = CheckboxGroup(labels=coils, active=[0, 1])
 coil_selection.on_change('active', update)
 
