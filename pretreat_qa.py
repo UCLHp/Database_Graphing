@@ -50,6 +50,15 @@ def db_connect(DATABASE_DIR, *, pswrd=''):
     return conn
 
 
+def update(attr, old, new):
+    coils_to_plot = [coil_selection.labels[i] for i in label_selection.active]
+
+    new_src = make_dataset(coils_to_plot)
+
+    src.data.update(new_src.data)
+
+
+
 conn = db_connect(DATABASE_DIR)
 
 df = pd.read_sql('select * from [MRI_Coils_Check]', conn)

@@ -52,13 +52,13 @@ def pretreat_ct(conn):
 	#
 	# Decide on what data to plot on the x/y axis when opened (enter the field
 	# names here)
-	x_data1 = 'field_name x'
-	y_data1 = 'field_name y'
+	x_data1 = 'adate'
+	y_data1 = 'snr'
 	# Decide what the plot formatting will be, inluding the plot title, axis
 	# titles and the size of the plot. A good generic start point is to use the
 	# field names as the axis titles but future plots could potentially use a
 	# look up table to give more user friendly titles.
-	plot_title1 = 'Title of the Plot'
+	plot_title1 = 'MRI Coil QA'
 	x_axis_title1 = x_data1
 	y_axis_title1 = y_data1
 	plot_size_height1 = 450
@@ -67,7 +67,7 @@ def pretreat_ct(conn):
 	# Set the fields that will display in the hovertool in addition to the x and
 	# y fields (NB: Can have a maximum of 10 options here). (Useful example
 	# defaults would be the comments field or maybe chamber/electrometer?)
-	hover_tool_fields = ['option1', 'option2']
+	hover_tool_fields = ['snr', 'snr_std']
 	# Create a list of the plot parameters that will be used as input to a
 	# function later.
 	list_plot_parameters = [x_data1, y_data1, plot_title1, x_axis_title1,
