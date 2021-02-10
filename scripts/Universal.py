@@ -303,6 +303,7 @@ def Update_HoverTool(hover1, x_data1, y_data1, Field1=None, Field2=None,
 			hover1.tooltips = ToolTips
 			hover1.formatters = { '@x': 'numeral', '@y': 'numeral'}
 
+
 	return
 
 

@@ -119,8 +119,7 @@ def produce_doc(doc):
     ###################### CONNECT TO THE DATABASE #############################
 
     # Tell code where the database is saved
-    DatabaseLocation =  'O:/protons/Work in Progress/Christian/Database/' \
-                        'Photon/PhysicsQA_beCopy25022020.mdb'
+    DatabaseLocation =  '\\\\mpb-dc101\\rtp-share$\\protons\\Work in Progress\\Christian\\Database\\Photon\\PhysicsQA_beCopy25022020.mdb'
 
     # Connect to the database. This connection will then be passed on to the tab
     # scripts to allow for reading from the database. Keeping it in the main

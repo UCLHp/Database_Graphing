@@ -24,6 +24,7 @@ from bokeh.palettes import turbo, Colorblind
 import bokeh.colors
 from bokeh.io import output_file, show
 from bokeh.transform import factor_cmap, factor_mark
+from bokeh.models.callbacks import CustomJS
 
 from scripts.Universal import (	Create_Select_Axis, Create_Select_Legend,
 								Create_Range_Sliders, Update_Range_Sliders,
@@ -480,6 +481,11 @@ def Photon_Output_Graph(conn):
 
 		Update_HoverTool(hover1, plot1_xdata_to_plot, plot1_ydata_to_plot,
 			**kwargs)
+
+		print(hover1.tooltips)
+		print(p1.hover.tooltips)
+		print(hover1)
+		print(p1.hover)
 
 		# Use the pre-defined Make_Dataset_Tolerance function with these new
 		# inputs to update the tolerances.
