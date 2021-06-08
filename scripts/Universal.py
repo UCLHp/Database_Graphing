@@ -303,7 +303,6 @@ def Update_HoverTool(hover1, x_data1, y_data1, Field1=None, Field2=None,
 			hover1.tooltips = ToolTips
 			hover1.formatters = { '@x': 'numeral', '@y': 'numeral'}
 
-
 	return
 
 
@@ -433,7 +432,7 @@ def Create_Legend(	df, color_column, custom_color_boolean,
 	# large enough and otherwise use the large Turbo palette. (Will error out if
 	# Turbo is not large enough.
 	else:
-		if (len(color_list) < 8) and (len(color_list) > 2):
+		if len(color_list) < 8:
 			color_palette = list(Colorblind[len(color_list)])
 		else:
 			# This will throw an error if you have more than 256 unique items

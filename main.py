@@ -147,14 +147,15 @@ def main():
 
     print('\nPreparing a bokeh application.')
 
-    # Define the application using the bokeh application function handler.
-    # https://docs.bokeh.org/en/latest/docs/reference/application/handlers/function.html
-    app = Application(FunctionHandler(produce_doc))
-
     # Start an Input/Output Loop. (Specifically a Tornado asynchronous I/O Loop)
     io_loop = IOLoop.current()
     port = 5001
     kwargs = {'io_loop': io_loop, 'port': port,}
+
+    # Define the application using the bokeh application function handler.
+    # https://docs.bokeh.org/en/latest/docs/reference/application/handlers/function.html
+    app = Application(FunctionHandler(produce_doc))
+
     # http://matthewrocklin.com/blog/work/2017/06/28/simple-bokeh-server
     server = Server({'/' : app},  **kwargs)
     server.start()
