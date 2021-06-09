@@ -1,8 +1,5 @@
 '''
-Create a graph for the Photon Output table from the Photon database
-
-This will also display quality index results as these are stored in the same
-table within the database.
+Scripts for plotting from the Photon Output Table
 
 '''
 
@@ -123,6 +120,14 @@ def special_tolerance(color_to_plot, x_data1, y_data1, Sub_df1, df_tol1_qi):
 
 
 def Photon_Output_Graph(conn):
+
+	'''
+	Create a graph for the Photon Output table from the Photon database
+
+	This will also display quality index results as these are stored in the same
+	table within the database.
+
+	'''
 
 	# Decide what the default viewing option is going to be.
 	x_data1 = 'adate'
@@ -269,11 +274,10 @@ def Photon_Output_Graph(conn):
 
 	# Create a layout
 	if color_column == marker_column:
-		layout_checkbox = column([color_title, checkbox_color, hover_title,
-		checkbox_hovertool])
+		layout_checkbox = column([color_title, checkbox_color])
 	else:
 		layout_checkbox = column([color_title, checkbox_color, marker_title,
-			checkbox_marker, hover_title, checkbox_hovertool])
+			checkbox_marker])
 	button_row = row([update_button, range_button])
 	layout_plots = column([	button_row, select_xaxis, select_yaxis,
 							select_legend,p1])
@@ -353,7 +357,6 @@ def Photon_Output_Graph(conn):
 	def callback_update():
 
 		# Make a new version of the dataframe going back to the database
-
 		df = create_df(sql, conn)
 		df = add_legend_to_df(df)
 
@@ -398,10 +401,11 @@ def Photon_Output_Graph(conn):
 				plot1_ydata_to_plot, Sub_df1, df_tol1)
 			Sub_df1_tol1_qi = special_tolerance(color_to_plot,
 				plot1_xdata_to_plot, plot1_ydata_to_plot, Sub_df1, df_tol1_qi)
-			src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
-			src1_tol_qi.data = Sub_df1_tol1_qi.to_dict(orient='list')
 
 		src1.data = Sub_df1.to_dict(orient='list')
+		if tolerance_boolean == True:
+			src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
+			src1_tol_qi.data = Sub_df1_tol1_qi.to_dict(orient='list')
 
 		return
 
@@ -410,6 +414,8 @@ def Photon_Output_Graph(conn):
 
 
 	# Callback for the Range Button
+		# Sets reasonable range if certain fields are selected
+
 	def callback_range():
 
 		color_to_plot = [	checkbox_color.labels[i] for i in
@@ -422,8 +428,7 @@ def Photon_Output_Graph(conn):
 		plot1_xdata_to_plot = select_xaxis.value
 		plot1_ydata_to_plot = select_yaxis.value
 
-		# Use the pre-defined Make_Dataset function with these new inputs to
-		# create new versions of the sub dataframes.
+		# Create new version of the sub-df
 		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
 			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
 
