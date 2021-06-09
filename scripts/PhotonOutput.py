@@ -58,8 +58,7 @@ def create_df(sql, conn):
 	df.loc[:, 'machinename'] = df_right[2]
 	df.loc[:, 'adate'] = pd.to_datetime(df.loc[:,'adate'], dayfirst=True)
 
-	# Drop any rows that aren't related to the Truebeams (ditches the old
-	# uneeded data).
+	# Drop any rows that aren't related to the Truebeams
 	df = df[df['machinename'].isin(['TrueBeam B', 'TrueBeam C', 'TrueBeam D', 'TrueBeam F'])]
 
 	# Drop any columns where there is no data
@@ -414,8 +413,7 @@ def Photon_Output_Graph(conn):
 
 
 	# Callback for the Range Button
-		# Sets reasonable range if certain fields are selected
-
+	# Sets reasonable range if certain fields are selected
 	def callback_range():
 
 		color_to_plot = [	checkbox_color.labels[i] for i in

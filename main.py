@@ -94,13 +94,15 @@ def produce_doc(doc):
     if choice == 'TrueBeam':
         # Create each tab by running the relevant scripts
         tab1 = Photon_Output_Graph(conn)
+        tab2 = Electron_Energy_Graph(conn)
         # Put all the tabs into one application
-        tabs = Tabs(tabs = [tab1])
+        tabs = Tabs(tabs = [tab1, tab2])
     elif choice == 'Proton':
         tab1 = Photon_Output_Graph(conn)
         tab2 = Flexitron_Output_Graph(conn)
+        tab3 = Gulmay_Output_Graph(conn)
         # Put all the tabs into one application
-        tabs = Tabs(tabs = [tab1, tab2])
+        tabs = Tabs(tabs = [tab1, tab2, tab3])
     elif choice == 'Gulmay':
         tab1 = Gulmay_Output_Graph(conn)
         # Put all the tabs into one application

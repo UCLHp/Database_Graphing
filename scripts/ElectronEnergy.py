@@ -1,5 +1,7 @@
-################################################################################
-############################## IMPORT LIBRARIES ################################
+'''
+Scripts for plotting from the Electron Energy Table
+
+'''
 
 # pandas and numpy for data manipulation
 import pandas as pd
@@ -32,28 +34,50 @@ from scripts.Universal import (	Create_Select_Axis, Create_Select_Legend,
 								Make_Dataset_Tolerance,
 								Create_Checkbox_HoverTool)
 
-################################################################################
-################################################################################
+
+def create_df(sql, conn):
+
+	'''
+	Takes a connection to an MS Access database and pulls information from a
+	table in that database into a dataframe using an SQL Query
+	'''
+
+	# Read from database into dataframe
+	df = pd.read_sql('SELECT * FROM [eEnergyICP]', conn)
+
+	# Delete empty rows where the data is very important to have
+	df = df.dropna(subset=['protocol id'], how='any')
+
+	# Get adate and machine name from the protocol id
+	df_left = df['protocol id'].str.partition(sep = '_')
+	df_right = df['protocol id'].str.rpartition(sep = '_')
+	df.loc[:,'adate'] = df_left[0]
+	df.loc[:,'machinename'] = df_right[2]
+	df.loc[:,'adate'] = pd.to_datetime(df.loc[:,'adate'], dayfirst=True)
+
+	# Drop any rows that aren't related to the Truebeams
+	df=df[df['machinename'].isin(['TrueBeam B', 'TrueBeam C', 'TrueBeam D',
+		'TrueBeam F'])]
+
+	# Drop any columns where there is no data
+	df = df.dropna(axis='columns', how='all')
+
+	return df
 
 
 
 
-
-################################################################################
-################################ START OF CODE #################################
-
-# Create the function that will plot the data from this table/graph.
 def Electron_Energy_Graph(conn):
 
-	output_file("Electron_Energy_Graph2.html") #????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+	'''
+	Create a graph for the Flexitron Output table from the Photon database
 
-	############################################################################
- 	############################# USER INPUTS ##################################
+	This will also display quality index results as these are stored in the same
+	table within the database.
 
-	# Decide what the default viewing option is going to be. (i.e. the fields to
-	# be plotted on the x and y axis when the graph is opened).
-	# NB: Have it set that if axis is 'adate' then will automatically update
-	# to plot datetime.
+	'''
+
+	# Set default viewing option
 	x_data1 = 'adate'
 	y_data1 = '6fwhm'
 	plot_title1 = 'Electron Energy'
@@ -63,12 +87,10 @@ def Electron_Energy_Graph(conn):
 	plot_size_width1 = 800
 	legend_location = 'bottom_left'
 	hover_tool_fields = ['comments']
-	# Create a list of the plot parameters that will be used as input to a
-	# function later.
+	# Create a list of the plot parameters
 	list_plot_parameters = [x_data1, y_data1, plot_title1, x_axis_title1,
 		y_axis_title1, plot_size_height1, plot_size_width1, legend_location]
-	# Define the fields that the legend will be based off. If there is only
-	# one field then put it in both columns.
+	# Define the fields for the legend
 	color_column = 'machinename'
 	custom_color_boolean = False
 	custom_color_palette = []
@@ -76,89 +98,24 @@ def Electron_Energy_Graph(conn):
 	custom_marker_boolean = False
 	custom_marker_palette = []
 	# From the legend defined above give the values that will be pre-ticked when
-	# the plot is opened. NB: Bokeh will throw an error if one of these lists is
-	# empty (i.e. =[]) If only using color or marker then set the color_to plot
-	# and then enter the command:  marker_to_plot = color_to_plot.
+	# the plot is opened.
 	color_to_plot = ['TrueBeam B', 'TrueBeam C']
 	marker_to_plot = ['option1', 'option2', 'option3']
 	marker_to_plot = color_to_plot
 
-	############################################################################
-	#################### CREATE THE DATA FOR THE GRAPH #########################
+	# Create a dataframe containing the data from the table
+	sql = 'SELECT * FROM [eEnergyICP]'
+	df = create_df(sql, conn)
 
-	# Do this in a function so it can be used in an update callback later
-
-	def Create_df():
-
-		# Use the connection passed to the function to read the data into a
-		# dataframe via an SQL query.
-		df = pd.read_sql('SELECT * FROM [eEnergyICP]', conn)
-
-		# Delete empty rows where the data is very important to have
-		df = df.dropna(subset=['protocol id'], how='any')
-
-		# The format is complicated for this field but seems to be that the date is
-		# always the first element and the machine is always the last regardless of
-		# how many elements there are.
-		# Seperate on the first '_'
-		df_left = df['protocol id'].str.partition(sep = '_')
-		# Seperate on the last '_'
-		df_right = df['protocol id'].str.rpartition(sep = '_')
-		# From these sperated dataframes add the appropriate columns back into
-		# the main dataframe.
-		df.loc[:,'adate'] = df_left[0]
-		df.loc[:,'machinename'] = df_right[2]
-		# Turn 'adate' into datetime. An annoying factor in the database is a
-		# few entries with a different datetime format. In combination with the
-		# dayfirst=True parameter to override the American date default the
-		# to_datetime function seems to solve this. NB: Might be a little slow
-		# without feeding it a specific format but unlikely to be an issue given
-		# relatively small datasets. Possibly someway to feed multiple formats
-		# but currently more effort than it's worth.
-		df.loc[:,'adate'] = pd.to_datetime(df.loc[:,'adate'], dayfirst=True)
-
-		# Drop any rows that aren't related to the Truebeams (ditches the old
-		# uneeded data). Might be possible to put this in the SQL query but
-		# difficult as machinename is embedded in the protocol ID.
-		df=df[df['machinename'].isin(['TrueBeam B', 'TrueBeam C', 'TrueBeam D',
-			'TrueBeam F'])]
-
-		# Drop any columns where there is no data (likely because of the
-		# dropping of the old linacs (e.g. data that used to be collected from
-		# them that is no longer collected for the Truebeams))
-		df = df.dropna(axis='columns', how='all')
-
-		return df
-
-	df = Create_df()
-
-	# Create a list of the fields using the dataframe. By doing it now before
-	# the extra legend fields are added it's easy to limit what is displayed in
-	# the select widgets.
+	# Create a list of the fields using the dataframe.
+	AxisFields = ['adate', '6fwhm', '9fwhm', '12fwhm', '15fwhm', '16fwhm']
 	TableFields = (list(df.columns))
 
-	############################################################################
-	############################################################################
 
-
-
-
-
- 	############################################################################
- 	################ CREATE THE DATAFRAME FOR THE TOLERANCES ###################
-
-	# If you want to add tolerances change the boolean to True and construct the
-	# dataframe in the correct format.
+	# If you want to add tolerances change the boolean to True
 	tolerance_boolean = True
-	# The format of the dataframe should be the first line being the x_axis
-	# (with some values taken from the main dataframe to get the right
-	# formatting). The subsequent columns are the tolerances [low, high].
-	# NB: column names should match those from the main dataframe.
+	# Create toleance dataframes.
 	if tolerance_boolean == True:
-		df_tol1 = pd.DataFrame({'adate':[df['adate'].max(), df['adate'].max()],
-								'6fwhm':[6, 10],
-								'9fwhm':[9, 12]})
-
 		df_tol1 = pd.read_sql('SELECT * FROM [ElectronFWHMLimits]', conn)
 		df_tol1 = df_tol1.set_index('class')
 		df_tol1 = pd.DataFrame({'adate':[df['adate'].max(), df['adate'].max()],
@@ -168,115 +125,48 @@ def Electron_Energy_Graph(conn):
 								'15fwhm':[df_tol1.loc['TBUCLH', 'lower15'], df_tol1.loc['TBUCLH', 'upper15']]
 								})
 
-	############################################################################
-	############################################################################
 
-	############################################################################
-	############################################################################
-
-	'''
-
-	This is the end of the user input section. If you don't need to make any
-	other changes you can end here.
-
-	'''
-
-
-
-
-
-
-
-	##########################################################################
-	################### CREATE THE COLUMNS FOR THE LEGEND ######################
-
+	# Create columns for the legend
 	(color_list, color_palette, marker_list, marker_palette, df,
 		add_legend_to_df) = Create_Legend(df, color_column,
 		custom_color_boolean, custom_color_palette, marker_column,
 		custom_marker_boolean, custom_marker_palette)
 
-	############################################################################
-	############################################################################
-
-
-
-
-
-
- 	############################################################################
- 	################## FORMATTING AND CREATING A BASIC PLOT ####################
-
-	######### Make Dataset:
-	# Run the Make_Dataset function to create a sub dataframe that the plot will
-	# be made from.
+	# Make a sub dataframe that will be plotted and convert to ColumnDataSource
 	Sub_df1 = Make_Dataset(df, color_column, color_to_plot, marker_column,
 		marker_to_plot, x_data1, y_data1)
-
-	# Make the ColumnDataSource (when making convert dataframe to a dictionary,
-	# which is helpful for the callback).
 	src1 = ColumnDataSource(Sub_df1.to_dict(orient='list'))
 
-	######### Make Plot:
-	# Create an empty plot (plot parameters will be applied later in a way that
-	# can be manipulated in the callbacks)
+	# Create a plot
 	p1 = figure()
 	p1.scatter(	source = src1,
 				x = 'x',
 				y = 'y',
 				fill_alpha = 0.4,
 				size = 12,
-				# NB: Always use legend_field for this not legend_group as the
-				# former acts on the javascript side but the latter the Python
-				# side. Therefore the former will update automatically when the
-				# plot is changed with no need for a callback.
 				legend_field = 'legend',
 				marker = factor_mark('marker1', marker_palette, marker_list),
 				color = factor_cmap('color1', color_palette, color_list)
 				)
 
-
-	######### Add plot parameters:
+	# Set the plot parameters
 	Define_Plot_Parameters(p1, list_plot_parameters)
 
-	############################################################################
-	############################################################################
 
-
-
-
-
-	############################################################################
- 	############################ ADD TOLERANCES ################################
-
-	# We defined the tolerances further up and now want to add the correct ones
-	# to the plot. Only do this through if the boolean is set to True as
-	# otherwise the user doesn't want tolerances.
-
+	# Add tolerances if requested
 	if tolerance_boolean == True:
 
 		Sub_df1_tol1 = Make_Dataset_Tolerance(x_data1, y_data1, Sub_df1,
 			df_tol1)
-
 		src1_tol = ColumnDataSource(Sub_df1_tol1.to_dict(orient='list'))
 
+		# Add to the plot
 		p1.line(source = src1_tol, x = 'x', y = 'y_low', color = 'firebrick')
 		p1.line(source = src1_tol, x = 'x', y = 'y_high', color = 'firebrick')
 
-	############################################################################
-	############################################################################
-
-
-
-
-
-
- 	############################################################################
- 	################## ADD MORE COMPLEX TOOLS TO THE PLOT ######################
-
-	######## 1)
-	# Create a hover tool and add it to the plot
+	# Create a hover tool
 	hover1 = HoverTool()
-
+	# Check to make sure not too many fields are added to the field.
 	if len(hover_tool_fields) < 11:
 		kwargs = {}
 		i = 0
@@ -287,103 +177,49 @@ def Electron_Energy_Graph(conn):
 		kwargs = {}
 		msgbox('Too many fields selected to display on HoverTool ' \
 			'(Max = 10). Please reduce number of fields selected')
-
+	# Set hovertool parameters and add to the plot
 	Update_HoverTool(hover1, x_data1, y_data1, **kwargs)
-
 	p1.add_tools(hover1)
 
-	############################################################################
-	############################################################################
 
-
-
-
-
-
- 	############################################################################
- 	################# CREATE WIDGETS TO BE ADDED TO THE PLOT ###################
-
- 	######## 1)
-	# This select funtion will be used to create dropdown lists to change the
-	# data plotted on the x/y-axis.
-	select_xaxis, select_yaxis = Create_Select_Axis(TableFields, x_axis_title1,
+ 	######## Add widgets
+	# Dropdown lists to change the x/y-axis.
+	select_xaxis, select_yaxis = Create_Select_Axis(AxisFields, x_axis_title1,
 		y_axis_title1)
-
- 	######## 2)
-	# This select widget will be used to create dropdown lists to change the
-	# legend position.
+	# Dropdown list to change the legend position.
 	select_legend = Create_Select_Legend(legend_location)
-
-
-	######## 3)
-	# These checkbox widgets will be used to create a tool to select the machine
-	# and energy that are being plotted.
+	# Checkbox widgets used to create a tool to select the 'color' and 'marker' that are being plotted.
 	checkbox_color, checkbox_marker = Create_Checkbox_Legend(df, color_column,
 		color_to_plot, marker_column, marker_to_plot)
-
-
-	######## 4)
-	# These checkbox widgets will be used to create a tool to select the machine
-	# and energy that are being plotted.
+	# Checkbox widget used to select hovertool fields
 	checkbox_hovertool = Create_Checkbox_HoverTool(TableFields,
 		hover_tool_fields)
-
-
-	######## 5)
-	# Make an 'Update Button' to requery the database and get up to date data.
+	# Button to requery the database and get up to date data.
 	update_button = Button(label='Update', button_type='success')
-
-	######## 6)
-	# Make a Range Button
+	# Button to set to a pre defined range instead of all data
 	range_button = Button(label='Range', button_type='primary')
-
-	######## 7)
-	# Make some titles for the checkboxes
+	# Titles for the checkboxes
 	color_title = Div(text='<b>Machine Choice</b>')
 	marker_title = Div(text='<b>Marker</b>')
 	hover_title = Div(text='<b>Hovertool Fields</b>')
 
-	############################################################################
-	############################################################################
-
-
-
-
-
-	############################################################################
-	########################### CREATE A LAYOUT ################################
-
-	# Create a layout to add widgets and arrange the display.
+	# Create a layout
 	if color_column == marker_column:
-		layout_checkbox = column([color_title, checkbox_color, hover_title,
-			checkbox_hovertool])
+		layout_checkbox = column([color_title, checkbox_color])
 	else:
 		layout_checkbox = column([color_title, checkbox_color, marker_title,
-			checkbox_marker, hover_title, checkbox_hovertool])
-
+			checkbox_marker])
 	button_row = row([update_button, range_button])
-
 	layout_plots = column([	button_row, select_xaxis, select_yaxis,
 		select_legend, p1])
-
 	tab_layout = row([layout_plots, layout_checkbox])
 
-	############################################################################
-	############################################################################
 
-
-
-
-
- 	############################################################################
  	####################### CREATE CALLBACK FUNCTIONS ##########################
-
-
 	# Create a big callback that does most stuff
 	def callback(attr, old, new):
 
-		# Want to acquire the current values of all of the checkboxes and select
-		# widgets to provide as inputs for the re-plot.
+		# Acquire the current values of all of the widgets
 		color_to_plot = [checkbox_color.labels[i] for i in
 			checkbox_color.active]
 		if color_column != marker_column:
@@ -396,17 +232,16 @@ def Electron_Energy_Graph(conn):
 		plot1_xdata_to_plot = select_xaxis.value
 		plot1_ydata_to_plot = select_yaxis.value
 		legend_location = select_legend.value
+
 		# Set the new axis titles
 		x_axis_title1 = plot1_xdata_to_plot
 		y_axis_title1 = plot1_ydata_to_plot
 
-		# Use the pre-defined Make_Dataset function with these new inputs to
-		# create new versions of the sub dataframes.
+		# Create new version of the sub dataframe.
 		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
 			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
 
-		# Use the pre-defined Define_Plot_Parameters function with these new
-		# inputs to update the plot parameters.
+		# Update the plot.
 		Define_Plot_Parameters(p1, [plot1_xdata_to_plot, plot1_ydata_to_plot,
 	 		plot_title1, x_axis_title1, y_axis_title1, plot_size_height1,
 			plot_size_width1, legend_location])
@@ -426,8 +261,7 @@ def Electron_Energy_Graph(conn):
 		Update_HoverTool(hover1, plot1_xdata_to_plot, plot1_ydata_to_plot,
 			**kwargs)
 
-		# Use the pre-defined tolerances function with these new inputs to
-		# make a new version of the tolerances sub dataframe.
+		# Update the tolerances
 		if tolerance_boolean == True:
 			Sub_df1_tol1 = Make_Dataset_Tolerance(plot1_xdata_to_plot,
 				plot1_ydata_to_plot, Sub_df1, df_tol1)
@@ -451,11 +285,11 @@ def Electron_Energy_Graph(conn):
 	# Callback for the Update Button
 	def callback_update():
 
-		# Make a new version of the dataframe using the original Create_df
-		# function that connects to the database.
+		# Make a new version of the dataframe
 		df = Create_df()
 		df = add_legend_to_df(df, color_column, marker_column)
 
+		# Below here should be a copy of the main callback
 		color_to_plot = [checkbox_color.labels[i] for i in
 			checkbox_color.active]
 		if color_column != marker_column:
@@ -506,6 +340,7 @@ def Electron_Energy_Graph(conn):
 
 
 	# Callback for the Range Button
+	# Sets reasonable range if certain fields are selected
 	def callback_range():
 
 		color_to_plot = [	checkbox_color.labels[i] for i in
@@ -518,12 +353,9 @@ def Electron_Energy_Graph(conn):
 		plot1_xdata_to_plot = select_xaxis.value
 		plot1_ydata_to_plot = select_yaxis.value
 
-		# Use the pre-defined Make_Dataset function with these new inputs to
-		# create new versions of the sub dataframes.
-		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
+		# Make a new version of the sub-df
+		Sub_df1 = Make_Dataset(df, color_column, color_to_plot, marker_column,
 			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
-
-
 
 		x_data1 = select_xaxis.value
 		y_data1 = select_yaxis.value
@@ -556,22 +388,9 @@ def Electron_Energy_Graph(conn):
 	range_button.on_click(callback_range)
 
 
-
-	############################################################################
-	############################################################################
-
-
-
- 	############################################################################
- 	####################### RETURN TO THE MAIN SCRIPT ##########################
-
+	# Return panel to the main script
 	return Panel(child = tab_layout, title = 'Electron Energy')
 
-	############################################################################
-	############################################################################
-
-################################################################################
-################################################################################
 
 
 
