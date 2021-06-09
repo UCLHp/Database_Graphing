@@ -247,7 +247,6 @@ def Photon_Output_Graph(conn):
 	Update_HoverTool(hover1, x_data1, y_data1, **kwargs)
 	p1.add_tools(hover1)
 
-	
 
  	######## Add widgets
 	# Dropdown lists to change the x/y-axis.

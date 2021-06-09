@@ -100,12 +100,8 @@ def produce_doc(doc):
         tabs = Tabs(tabs = [tab1, tab2, tab3])
     elif choice == 'Proton':
         tab1 = Photon_Output_Graph(conn)
-        tab2 = Electron_Energy_Graph(conn)
-        tab3 = Flexitron_Output_Graph(conn)
-        tab4 = Gulmay_Output_Graph(conn)
-        tab5 = JawTravel(conn)
         # Put all the tabs into one application
-        tabs = Tabs(tabs = [tab1, tab2, tab3, tab4, tab5])
+        tabs = Tabs(tabs = [tab1])
     elif choice == 'Gulmay':
         tab1 = Gulmay_Output_Graph(conn)
         # Put all the tabs into one application
