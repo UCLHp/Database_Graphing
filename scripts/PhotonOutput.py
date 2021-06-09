@@ -358,7 +358,7 @@ def Photon_Output_Graph(conn):
 
 		# Make a new version of the dataframe going back to the database
 		df = create_df(sql, conn)
-		df = add_legend_to_df(df)
+		df = add_legend_to_df(df, color_column, marker_column)
 
 		color_to_plot = [checkbox_color.labels[i] for i in
 			checkbox_color.active]

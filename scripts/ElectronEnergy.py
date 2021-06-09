@@ -454,7 +454,7 @@ def Electron_Energy_Graph(conn):
 		# Make a new version of the dataframe using the original Create_df
 		# function that connects to the database.
 		df = Create_df()
-		df = add_legend_to_df(df)
+		df = add_legend_to_df(df, color_column, marker_column)
 
 		color_to_plot = [checkbox_color.labels[i] for i in
 			checkbox_color.active]

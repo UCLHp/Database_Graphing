@@ -822,7 +822,7 @@ def Sym_Graph(conn):
 		y_axis_title1 = plot1_ydata_to_plot
 
 		df = Create_df(energy_selection)
-		df = add_legend_to_df(df)
+		df = add_legend_to_df(df, color_column, marker_column)
 
 		# Use the pre-defined Make_Dataset function with these new inputs to
 		# create new versions of the sub dataframes.
@@ -893,7 +893,7 @@ def Sym_Graph(conn):
 		# Make a new version of the dataframe using the original Create_df
 		# function that connects to the database.
 		df = Create_df(energy_selection)
-		df = add_legend_to_df(df)
+		df = add_legend_to_df(df, color_column, marker_column)
 
 		# The rest of this callback is a copy from the original callback above.
 		color_to_plot = [checkbox_color.labels[i] for i in

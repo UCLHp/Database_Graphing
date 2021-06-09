@@ -173,7 +173,7 @@ def Flexitron_Output_Graph(conn):
 
 	######## Add widgets
 	# Dropdown lists to change the x/y-axis.
-	select_xaxis, select_yaxis = Create_Select_Axis(TableFields, x_axis_title1,
+	select_xaxis, select_yaxis = Create_Select_Axis(AxisFields, x_axis_title1,
 		y_axis_title1)
 	# Dropdown list to change the legend position.
 	select_legend = Create_Select_Legend(legend_location)
@@ -274,7 +274,7 @@ def Flexitron_Output_Graph(conn):
 
 		# Make a new version of the dataframe going back to the database
 		df = create_df(sql, conn)
-		df = add_legend_to_df(df)
+		df = add_legend_to_df(df, color_column, marker_column)
 
 		# The rest of this callback is a copy from the original callback above.
 		color_to_plot = [checkbox_color.labels[i] for i in
