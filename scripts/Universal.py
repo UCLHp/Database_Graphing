@@ -374,7 +374,6 @@ def Create_Legend(	df, color_column, custom_color_boolean,
 	######### Colors:
 	# Create a list of unique values
 	color_list = sorted(df[color_column].unique().tolist())
-
 	# Using custom set?
 	# NB: Custom set can be entered as fuction (e.g. turbo), a dictionary (e.g.
 	# Colorblind) or a list (e.g. a user specified list of hex values).

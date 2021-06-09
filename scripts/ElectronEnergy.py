@@ -238,7 +238,7 @@ def Electron_Energy_Graph(conn):
 		y_axis_title1 = plot1_ydata_to_plot
 
 		# Create new version of the sub dataframe.
-		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
+		Sub_df1 = Make_Dataset(df, color_column, color_to_plot, marker_column,
 			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
 
 		# Update the plot.
