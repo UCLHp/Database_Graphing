@@ -25,6 +25,7 @@ from easygui import buttonbox, msgbox
 import pandas as pd
 import pypyodbc
 import os
+import webbrowser
 
 # Import some stuff from bokeh and tornado libraries to maniulate tabs and
 # create/run the server.
@@ -155,7 +156,24 @@ def main():
     server = Server({'/' : app},  **kwargs)
     server.start()
     print('\nOpening Bokeh application on http://localhost:5001/')
-    server.show('/')
+
+    # Try and connect to google chrome
+    try:
+        webbrowser.get("chrome")
+        server.show('/', browser="chrome")
+    except:
+        # If connection fails then look in a couple of typical locations for chrome
+        if os.path.isfile("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"):
+            chrome_path="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+            webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+            server.show('/', browser="chrome")
+        elif os.path.isfile("C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"):
+            chrome_path="C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+            webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+            server.show('/', browser="chrome")
+        else:
+            # Else just use the default browser
+            server.show('/')
 
     # Start the Input/Output Loop
     io_loop.start()
