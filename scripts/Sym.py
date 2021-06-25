@@ -246,9 +246,11 @@ def Sym_Graph(conn):
 	# This deletes the raw data leaving just the processed stuff. Works because
 	# the default energy selection is 6MV
 	bad_list = ['g17 6mv', 'g9 6mv', 't9 6mv','t17 6mv', 'a17 6mv', 'a9 6mv',
-		'b9 6mv','b17 6mv','flatness 6mv gt', 'flatness 6mv ab' ]
+		'b9 6mv','b17 6mv','flatness 6mv gt', 'flatness 6mv ab']
 	TableFields = [x for x in TableFields if x not in bad_list]
-
+	# Re add these columns that otherwise get cleared out by .dropna(axis='columns', how='all')
+	TableFields.extend(['inline_7', 'crossline_7'])
+	AxisFields = [x for x in TableFields if x not in ['machinename', 'protocol id']]
 
 	# If you want to add tolerances change the boolean to True
 	tolerance_boolean = False
@@ -386,7 +388,7 @@ def Sym_Graph(conn):
 
  	######## Widgets
 	# Dropdown lists to change the x/y-axis.
-	select_xaxis, select_yaxis = Create_Select_Axis(TableFields, x_axis_title1,
+	select_xaxis, select_yaxis = Create_Select_Axis(AxisFields, x_axis_title1,
 		y_axis_title1)
 	# Dropdown list to change the legend position.
 	select_legend = Create_Select_Legend(legend_location)
