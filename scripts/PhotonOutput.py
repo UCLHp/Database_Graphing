@@ -6,10 +6,12 @@ Scripts for plotting from the Photon Output Table
 
 # pandas and numpy for data manipulation
 import types
+import sys
 import pandas as pd
 import numpy as np
 from easygui import buttonbox, msgbox
 from datetime import date, timedelta
+import keyboard
 
 from bokeh.plotting import figure
 from bokeh.models import (CategoricalColorMapper, HoverTool, BoxZoomTool,
@@ -35,6 +37,8 @@ from scripts.Universal import (	Create_Select_Axis, Create_Select_Legend,
 								Update_HoverTool, Create_Legend, Make_Dataset,
 								Make_Dataset_Tolerance,
 								Create_Checkbox_HoverTool)
+
+
 
 
 def create_df(sql, conn):
@@ -271,13 +275,22 @@ def Photon_Output_Graph(conn):
 	marker_title = Div(text='<b>Machine Choice</b>')
 	hover_title = Div(text='<b>Hovertool Fields</b>')
 
+
+
+	quit_button = Button(label='Quit', button_type='danger')
+
+
+
+
+
+
 	# Create a layout
 	if color_column == marker_column:
 		layout_checkbox = column([color_title, checkbox_color])
 	else:
 		layout_checkbox = column([color_title, checkbox_color, marker_title,
 			checkbox_marker])
-	button_row = row([update_button, range_button])
+	button_row = row([update_button, range_button, quit_button])
 	layout_plots = column([	button_row, select_xaxis, select_yaxis,
 							select_legend,p1])
 	tab_layout = row([layout_plots, layout_checkbox])
@@ -448,6 +461,13 @@ def Photon_Output_Graph(conn):
 		return
 
 	range_button.on_click(callback_range)
+
+	def callback_quit():
+		# Close the open browser tab and shut down the bokeh server
+		keyboard.press_and_release('ctrl+w')
+		sys.exit()
+
+	quit_button.on_click(callback_quit)
 
 	# Return the panel to the main script
 	return Panel(child = tab_layout, title = 'Photon Output')
