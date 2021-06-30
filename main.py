@@ -45,6 +45,7 @@ from scripts.ElectronEnergy import Electron_Energy_Graph
 from scripts.JawTravel import JawTravel
 from scripts.FlexitronOutput import Flexitron_Output_Graph
 from scripts.Sym import Sym_Graph
+from scripts.ElectronOutput import Electron_Output_Graph
 
 ###### Start of patch!
 ###### Need a fix for running the Tornado Server in Python 3.8 on Windows. This
@@ -97,9 +98,10 @@ def produce_doc(doc):
         # Create each tab by running the relevant scripts
         tab1 = Photon_Output_Graph(conn)
         tab2 = Electron_Energy_Graph(conn)
-        tab3 = Sym_Graph(conn)
+        tab3 = Electron_Output_Graph(conn)
+        tab4 = Sym_Graph(conn)
         # Put all the tabs into one application
-        tabs = Tabs(tabs = [tab1, tab2, tab3])
+        tabs = Tabs(tabs = [tab1, tab2, tab3, tab4])
     elif choice == 'Proton':
         tab1 = Photon_Output_Graph(conn)
         tab2 = Flexitron_Output_Graph(conn)
