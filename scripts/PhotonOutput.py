@@ -5,7 +5,6 @@ Scripts for plotting from the Photon Output Table
 
 
 # pandas and numpy for data manipulation
-import types
 import sys
 import pandas as pd
 import numpy as np
