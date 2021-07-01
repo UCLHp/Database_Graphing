@@ -64,6 +64,7 @@ def create_df(sql, conn):
 
 	# Drop any rows that aren't related to the Truebeams
 	df = df[df['machinename'].isin(['TrueBeam B', 'TrueBeam C', 'TrueBeam D', 'TrueBeam F'])]
+	df = df[~df['energy'].isin(['6XTB'])]
 
 	# Drop any columns where there is no data
 	df = df.dropna(axis='columns', how='all')
@@ -270,19 +271,12 @@ def Photon_Output_Graph(conn):
 	update_button = Button(label='Update', button_type='success')
 	# Button to set to a pre defined range instead of all data
 	range_button = Button(label='Range', button_type='primary')
+	# Button to quit
+	quit_button = Button(label='Quit', button_type='danger')
 	# Titles for the checkboxes
 	color_title = Div(text='<b>Energy Choice</b>')
 	marker_title = Div(text='<b>Machine Choice</b>')
 	hover_title = Div(text='<b>Hovertool Fields</b>')
-
-
-
-	quit_button = Button(label='Quit', button_type='danger')
-
-
-
-
-
 
 	# Create a layout
 	if color_column == marker_column:

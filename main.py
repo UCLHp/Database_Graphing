@@ -21,11 +21,12 @@ import time
 start = time.time()
 
 # Import some basic tools from easygui to allow for user interface
-from easygui import buttonbox, msgbox
+import easygui as eg
 import pandas as pd
 import pypyodbc
 import os
 import webbrowser
+import multiprocessing
 
 # Import some stuff from bokeh and tornado libraries to maniulate tabs and
 # create/run the server.
@@ -77,7 +78,7 @@ def produce_doc(doc):
     '''
 
     # User interface
-    choice = buttonbox('Click on what you want to plot.', 'Graphing Code',
+    choice = eg.buttonbox('Click on what you want to plot.', 'Graphing Code',
         ('Proton', 'TrueBeam', 'Gulmay', 'Flexitron'))
 
     # Tell code where the database is saved
@@ -117,7 +118,7 @@ def produce_doc(doc):
         # Put all the tabs into one application
         tabs = Tabs(tabs = [tab1])
     else:
-        msgbox('Error')
+        eg.msgbox('Error')
         exit()
 
     # Put all of the tabs into the doccument
@@ -186,8 +187,24 @@ def main():
 
 if __name__ == '__main__':
 
-    # Run main
-    main()
+
+    # Start bar as a process
+    p = multiprocessing.Process(target=main)
+    p.start()
+
+    # Wait for 10 seconds or until process finishes
+    delay = 60
+    p.join(delay)
+
+    # If thread is still active
+    if p.is_alive():
+        eg.msgbox('Program has been running running for ' + str(delay) +'seconds. Let\'s kill it...')
+        # Terminate - may not work if process is stuck for good
+        p.terminate()
+        p.join()
+
+    # # Run main
+    # main()
 
 
 
