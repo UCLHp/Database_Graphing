@@ -192,8 +192,8 @@ if __name__ == '__main__':
     p = multiprocessing.Process(target=main)
     p.start()
 
-    # Wait for 10 seconds or until process finishes
-    delay = 60
+    # Wait for 1800 seconds (30 mins) or until process finishes
+    delay = 1800
     p.join(delay)
 
     # If thread is still active
