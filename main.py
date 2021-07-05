@@ -146,6 +146,25 @@ def main():
 
     print('\nPreparing a bokeh application.')
 
+    # Try and connect to google chrome
+    try:
+        webbrowser.get("chrome")
+        found_chrome = True
+    except:
+        # If connection fails then look in a couple of typical locations for chrome
+        if os.path.isfile("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"):
+            chrome_path="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+            webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+            chrome = webbrowser.get('chrome')
+            found_chrome = True
+        elif os.path.isfile("C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"):
+            chrome_path="C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+            webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+            chrome = webbrowser.get('chrome')
+            found_chrome = True
+        else:
+            found_chrome = False
+
     # Start an Input/Output Loop. (Specifically a Tornado asynchronous I/O Loop)
     io_loop = IOLoop.current()
     port = 5001
@@ -156,30 +175,23 @@ def main():
     app = Application(FunctionHandler(produce_doc))
 
     # http://matthewrocklin.com/blog/work/2017/06/28/simple-bokeh-server
-    server = Server({'/' : app},  **kwargs)
-    server.start()
-    print('\nOpening Bokeh application on http://localhost:5001/')
-
-    # Try and connect to google chrome
     try:
-        webbrowser.get("chrome")
-        server.show('/', browser="chrome")
-    except:
-        # If connection fails then look in a couple of typical locations for chrome
-        if os.path.isfile("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"):
-            chrome_path="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-            webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
-            server.show('/', browser="chrome")
-        elif os.path.isfile("C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"):
-            chrome_path="C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-            webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+        server = Server({'/' : app},  **kwargs)
+        server.start()
+        print('\nOpening Bokeh application on http://localhost:5001/')
+
+        if found_chrome:
             server.show('/', browser="chrome")
         else:
-            # Else just use the default browser
             server.show('/')
-
-    # Start the Input/Output Loop
-    io_loop.start()
+        # Start the Input/Output Loop
+        io_loop.start()
+    except OSError:
+        url = 'http://localhost:5001'
+        if found_chrome:
+            chrome.open_new_tab(url);
+        else:
+            webbrowser.open_new_tab()
 
     return
 
@@ -187,24 +199,28 @@ def main():
 
 if __name__ == '__main__':
 
+    # This line is necessary for packaging as an executable and avoiding
+    # unnecessary loops
+    multiprocessing.freeze_support()
 
     # Start bar as a process
     p = multiprocessing.Process(target=main)
     p.start()
 
-    # Wait for 1800 seconds (30 mins) or until process finishes
-    delay = 1800
+    # Wait for 600 seconds (10 mins) or until process finishes
+    delay = 600
+    interval = 300
     p.join(delay)
 
-    # If thread is still active
-    if p.is_alive():
-        eg.msgbox('Program has been running running for ' + str(delay) +'seconds. Let\'s kill it...')
-        # Terminate - may not work if process is stuck for good
-        p.terminate()
-        p.join()
+    while True:
+        if p.is_alive():
+            if eg.ynbox('Program has been running for approximatly ' + str(int(delay/60)) + ' minutes. Do you want to close it?'):
+                p.terminate()
+                sys.exit()
+            else:
+                delay = delay + interval
+                time.sleep(interval)
 
-    # # Run main
-    # main()
 
 
 

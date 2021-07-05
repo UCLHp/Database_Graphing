@@ -8,9 +8,12 @@ Scripts for plotting from the Photon Output Table
 import sys
 import pandas as pd
 import numpy as np
-from easygui import buttonbox, msgbox
+from easygui import buttonbox, msgbox, ynbox
+import tkinter as tk
+import datetime
 from datetime import date, timedelta
 import keyboard
+
 
 from bokeh.plotting import figure
 from bokeh.models import (CategoricalColorMapper, HoverTool, BoxZoomTool,
@@ -36,7 +39,7 @@ from scripts.Universal import (	Create_Select_Axis, Create_Select_Legend,
 								Update_HoverTool, Create_Legend, Make_Dataset,
 								Make_Dataset_Tolerance,
 								Create_Checkbox_HoverTool)
-
+from scripts.test2 import callback_export
 
 
 
@@ -138,7 +141,7 @@ def Photon_Output_Graph(conn):
 	plot_title1 = 'Photon Output Results'
 	x_axis_title1 = x_data1
 	y_axis_title1 = y_data1
-	plot_size_height1 = 450
+	plot_size_height1 = 500
 	plot_size_width1 = 800
 	legend_location = 'bottom_left'
 	hover_tool_fields = ['chamber and electrometer', 'comments']
@@ -267,11 +270,13 @@ def Photon_Output_Graph(conn):
 	# Checkbox widget used to select hovertool fields
 	checkbox_hovertool = Create_Checkbox_HoverTool(TableFields, hover_tool_fields)
 	# Button to requery the database and get up to date data.
-	update_button = Button(label='Update', button_type='success')
+	update_button = Button(label='Update', button_type='success', width=int(plot_size_width1/2))
 	# Button to set to a pre defined range instead of all data
-	range_button = Button(label='Range', button_type='primary')
+	range_button = Button(label='Range', button_type='primary', width=int(plot_size_width1/2))
 	# Button to quit
-	quit_button = Button(label='Quit', button_type='danger')
+	quit_button = Button(label='Quit', button_type='danger', width=int(plot_size_width1/2))
+	# Button to export raw data
+	export_button = Button(label='Export to CSV', button_type='warning', width=int(plot_size_width1/2))
 	# Titles for the checkboxes
 	color_title = Div(text='<b>Energy Choice</b>')
 	marker_title = Div(text='<b>Machine Choice</b>')
@@ -283,9 +288,10 @@ def Photon_Output_Graph(conn):
 	else:
 		layout_checkbox = column([color_title, checkbox_color, marker_title,
 			checkbox_marker])
-	button_row = row([update_button, range_button, quit_button])
-	layout_plots = column([	button_row, select_xaxis, select_yaxis,
-							select_legend,p1])
+	button_row1 = row([update_button, range_button])
+	button_row2 = row([quit_button, export_button])
+	layout_plots = column([button_row1, button_row2, select_xaxis,
+		select_yaxis, select_legend,p1])
 	tab_layout = row([layout_plots, layout_checkbox])
 
 
@@ -461,6 +467,47 @@ def Photon_Output_Graph(conn):
 		sys.exit()
 
 	quit_button.on_click(callback_quit)
+
+
+	def callback_export():
+
+		x_data1 = select_xaxis.value
+		y_data1 = select_yaxis.value
+
+		Sub_df2 = Sub_df1.copy()
+		Sub_df2[x_data1] = Sub_df2['x']
+		Sub_df2[y_data1] = Sub_df2['y']
+		# Find a file name and location to save the export
+
+		if ynbox(msg = 'Do you want to export the visible range or all data?', choices=('Visible Range', 'All Data')):
+			if x_data1 == 'adate':
+				x_range_start = datetime.datetime.fromtimestamp(p1.x_range.start/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
+				x_range_end = datetime.datetime.fromtimestamp(p1.x_range.end/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
+				Sub_df2.drop(Sub_df2[Sub_df2['x'] < x_range_start].index, inplace=True)
+				Sub_df2.drop(Sub_df2[Sub_df2['x'] > x_range_end].index, inplace=True)
+			else:
+				Sub_df2.drop(Sub_df2[Sub_df2['x'] < p1.x_range.start].index, inplace=True)
+				Sub_df2.drop(Sub_df2[Sub_df2['x'] > p1.x_range.end].index, inplace=True)
+			if y_data1 == 'adate':
+				y_range_start = datetime.datetime.fromtimestamp(p1.y_range.start/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
+				y_range_end = datetime.datetime.fromtimestamp(p1.y_range.end/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
+				Sub_df2.drop(Sub_df2[Sub_df2['y'] < y_range_start].index, inplace=True)
+				Sub_df2.drop(Sub_df2[Sub_df2['y'] > y_range_start].index, inplace=True)
+			else:
+				Sub_df2.drop(Sub_df2[Sub_df2['y'] < p1.y_range.start].index, inplace=True)
+				Sub_df2.drop(Sub_df2[Sub_df2['y'] > p1.y_range.end].index, inplace=True)
+
+		root = tk.Tk()
+		root.withdraw()
+		filepath = tk.filedialog.asksaveasfilename(filetypes=[("csv files", '*.csv')],
+		    initialfile='graphing_export.csv', defaultextension = '.csv', initialdir = 'O:\\')
+		if filepath:
+			# If the filepath has been selected
+			Sub_df2.to_csv(filepath, index=False)
+			msgbox('Data saved to: ' + filepath)
+
+	export_button.on_click(callback_export)
+
 
 	# Return the panel to the main script
 	return Panel(child = tab_layout, title = 'Photon Output')
