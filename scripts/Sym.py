@@ -4,13 +4,16 @@ Scripts for plotting from the Flatness and Symmetry Table
 '''
 
 # pandas and numpy for data manipulation
+
+import sys
 import pandas as pd
 import numpy as np
-
+from easygui import buttonbox, msgbox, ynbox
 import easygui as eg
-
-# datetime for setting up DateRangeSlider with generic values
-from datetime import date
+import tkinter as tk
+import datetime
+from datetime import date, timedelta
+import keyboard
 
 # functions from bokeh
 from bokeh.plotting import figure
@@ -105,7 +108,7 @@ def create_df(energy_selection, conn):
 						'[flatness 10fff gt], [flatness 10fff ab] ' \
 						'from [flat sym]', conn)
 		#filter row with data = 0
-		df = df[df['g17 6fff'] !=0]
+		df = df[df['g17 10fff'] !=0]
 		#add difference in symmetry values to y-axis
 		df['inline_17'] = df['g17 10fff'] - df['t17 10fff']
 		df['crossline_17'] = df['a17 10fff'] - df['b17 10fff']
@@ -218,7 +221,7 @@ def Sym_Graph(conn):
 	plot_title1 = 'Symmetry'
 	x_axis_title1 = x_data1
 	y_axis_title1 = y_data1
-	plot_size_height1 = 450
+	plot_size_height1 = 500
 	plot_size_width1 = 800
 	legend_location = 'bottom_left'
 	hover_tool_fields = ['adate', 'gantry angle']
@@ -253,7 +256,7 @@ def Sym_Graph(conn):
 	AxisFields = [x for x in TableFields if x not in ['machinename', 'protocol id']]
 
 	# If you want to add tolerances change the boolean to True
-	tolerance_boolean = False
+	tolerance_boolean = True
 	# Create toleance dataframes.
 	if tolerance_boolean == True:
 		df_tol1 = pd.DataFrame({'adate':[df['adate'].max(), df['adate'].max()],
@@ -268,11 +271,15 @@ def Sym_Graph(conn):
 									'6MV_gt':[-10, 10],
 									'6MV_ab':[-10, 10],
 									'10MV_gt':[-10, 10],
-									'10MV_ab':[-10, 10]})
+									'10MV_ab':[-10, 10],
+									'6XFFF_gt':[-10, 10],
+									'6XFFF_ab':[-10, 10],
+									'10XFFF_gt':[-10, 10],
+									'10XFFF_ab':[-10, 10]})
 
 		def special_tolerance(color_to_plot, x_data1, y_data1, Sub_df1, df_tol1_flat):
 
-			energy_list = ['6MV', '10MV']
+			energy_list = ['6MV', '10MV', '6XFFF', '10XFFF']
 			data = {}
 
 			if (x_data1 != 'adate') or (y_data1 != 'flatness_gt'):
@@ -324,9 +331,6 @@ def Sym_Graph(conn):
 	Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
 		marker_to_plot, x_data1, y_data1	)
 	src1 = ColumnDataSource(Sub_df1.to_dict(orient='list'))
-
-	print(color_list)
-	print(type(color_list[0]))
 
 	# Create a plot
 	p1 = figure()
@@ -399,23 +403,32 @@ def Sym_Graph(conn):
 	checkbox_hovertool = Create_Checkbox_HoverTool(TableFields,
 		hover_tool_fields)
 	# Button to requery the database and get up to date data.
-	update_button = Button(label='Update with latest data', button_type='success')
+	update_button = Button(label='Update', button_type='success', width=int(plot_size_width1/2))
+	# Button to set to a pre defined range instead of all data
+	range_button = Button(label='Range', button_type='primary', width=int(plot_size_width1/2))
+	# Button to quit
+	quit_button = Button(label='Quit', button_type='danger', width=int(plot_size_width1/2))
+	# Button to export raw data
+	export_button = Button(label='Export to CSV', button_type='warning', width=int(plot_size_width1/2))
 	# Titles for the checkboxes
 	color_title = Div(text='<b>Machine Choice</b>')
 	marker_title = Div(text='<b>Marker</b>')
 	hover_title = Div(text='<b>Hovertool Fields</b>')
+	energy_title = Div(text='<b>Energy Selection</b>')
 	# Energy selection widget
 	checkbox_energy = RadioGroup(labels=["6MV", "10MV", "6FFF", "10FFF", "6MeV",
 		"9MeV", "12MeV", "15MeV"], active=0)
 
 	# Create a layout
 	if color_column == marker_column:
-		layout_checkbox = column([color_title, checkbox_color])
+		layout_checkbox = column([color_title, checkbox_color, energy_title, checkbox_energy])
 	else:
 		layout_checkbox = column([color_title, checkbox_color, marker_title,
-		checkbox_marker])
-	layout_plots = column([	update_button, checkbox_energy,
-							select_xaxis, select_yaxis, select_legend, p1])
+		checkbox_marker, energy_title, checkbox_energy])
+	row_button1 = row([update_button, range_button])
+	row_button2 = row([quit_button, export_button])
+	layout_plots = column([row_button1, row_button2, select_xaxis, select_yaxis,
+		select_legend, p1])
 	# Add the two columns side-by-side.
 	tab_layout = row([layout_plots, layout_checkbox])
 
@@ -505,6 +518,8 @@ def Sym_Graph(conn):
 			checkbox_color.active]
 		marker_to_plot = [checkbox_marker.labels[i] for i in
 			checkbox_marker.active]
+		hovertool_to_plot = [checkbox_hovertool.labels[i] for i in
+			checkbox_hovertool.active]
 		plot1_xdata_to_plot = select_xaxis.value
 		plot1_ydata_to_plot = select_yaxis.value
 		x_axis_title1 = plot1_xdata_to_plot
@@ -537,6 +552,102 @@ def Sym_Graph(conn):
 		return
 
 	update_button.on_click(callback_update)
+
+
+
+	# Callback for the Range Button
+	# Sets reasonable range if certain fields are selected
+	def callback_range():
+
+		energy_selection = checkbox_energy.labels[checkbox_energy.active]
+		plot1_xdata_to_plot = select_xaxis.value
+		plot1_ydata_to_plot = select_yaxis.value
+		color_to_plot = [checkbox_color.labels[i] for i in
+			checkbox_color.active]
+		marker_to_plot = [checkbox_marker.labels[i] for i in
+			checkbox_marker.active]
+
+		df = create_df(energy_selection, conn)
+		df = add_legend_to_df(df, color_column, marker_column)
+		Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
+			marker_to_plot, plot1_xdata_to_plot, plot1_ydata_to_plot)
+
+		if (plot1_xdata_to_plot == 'adate') and ((plot1_ydata_to_plot.startswith('crossline_'))
+			or (plot1_ydata_to_plot.startswith('inline_')) or (plot1_ydata_to_plot.startswith('flatness_'))):
+
+			p1.x_range.start = Sub_df1['x'].max() - timedelta(weeks=53)
+			p1.x_range.end = Sub_df1['x'].max() + timedelta(weeks=2)
+
+			if (plot1_ydata_to_plot.startswith('crossline_')) or (plot1_ydata_to_plot.startswith('inline_')):
+				p1.y_range.start = 2.5
+				p1.y_range.end = -2.5
+			elif plot1_ydata_to_plot.startswith('flatness_'):
+				if energy_selection in ['6MV', '10MV']:
+					p1.y_range.start = 3
+					p1.y_range.end = 8
+				elif energy_selection in ['6FFF']:
+					p1.y_range.start = 36
+					p1.y_range.end = 39
+				elif energy_selection in ['10FFF']:
+					p1.y_range.start = 41
+					p1.y_range.end = 45
+				elif energy_selection in ['6MeV', '9MeV', '12MeV', '15MeV']:
+					p1.y_range.start = 1
+					p1.y_range.end = 5
+		return
+
+	range_button.on_click(callback_range)
+
+
+	def callback_quit():
+		# Close the open browser tab and shut down the bokeh server
+		keyboard.press_and_release('ctrl+w')
+		sys.exit()
+
+	quit_button.on_click(callback_quit)
+
+
+	def callback_export():
+
+		x_data1 = select_xaxis.value
+		y_data1 = select_yaxis.value
+
+		Sub_df2 = Sub_df1.copy()
+		Sub_df2[x_data1] = Sub_df2['x']
+		Sub_df2[y_data1] = Sub_df2['y']
+		# Find a file name and location to save the export
+
+		if ynbox(msg = 'Do you want to export the visible range or all data?', choices=('Visible Range', 'All Data')):
+
+			if x_data1 == 'adate' and isinstance(p1.x_range.start, float):
+				x_range_start = datetime.datetime.fromtimestamp(p1.x_range.start/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
+				x_range_end = datetime.datetime.fromtimestamp(p1.x_range.end/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
+				Sub_df2.drop(Sub_df2[Sub_df2['x'] < x_range_start].index, inplace=True)
+				Sub_df2.drop(Sub_df2[Sub_df2['x'] > x_range_end].index, inplace=True)
+			else:
+				Sub_df2.drop(Sub_df2[Sub_df2['x'] < p1.x_range.start].index, inplace=True)
+				Sub_df2.drop(Sub_df2[Sub_df2['x'] > p1.x_range.end].index, inplace=True)
+
+			if y_data1 == 'adate' and isinstance(p1.y_range.start, float):
+				y_range_start = datetime.datetime.fromtimestamp(p1.y_range.start/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
+				y_range_end = datetime.datetime.fromtimestamp(p1.y_range.end/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
+				Sub_df2.drop(Sub_df2[Sub_df2['y'] < y_range_start].index, inplace=True)
+				Sub_df2.drop(Sub_df2[Sub_df2['y'] > y_range_start].index, inplace=True)
+			else:
+				Sub_df2.drop(Sub_df2[Sub_df2['y'] < p1.y_range.start].index, inplace=True)
+				Sub_df2.drop(Sub_df2[Sub_df2['y'] > p1.y_range.end].index, inplace=True)
+
+		root = tk.Tk()
+		root.withdraw()
+		filepath = tk.filedialog.asksaveasfilename(filetypes=[("csv files", '*.csv')],
+		    initialfile='graphing_export.csv', defaultextension = '.csv', initialdir = 'O:\\')
+		if filepath:
+			# If the filepath has been selected
+			Sub_df2.to_csv(filepath, index=False)
+			msgbox('Data saved to: ' + filepath)
+
+	export_button.on_click(callback_export)
+
 
 	# Return panel to the main script
 	return Panel(child = tab_layout, title = 'Symmetry Graph')

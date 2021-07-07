@@ -415,7 +415,8 @@ def Electron_Energy_Graph(conn):
 		# Find a file name and location to save the export
 
 		if ynbox(msg = 'Do you want to export the visible range or all data?', choices=('Visible Range', 'All Data')):
-			if x_data1 == 'adate':
+
+			if x_data1 == 'adate' and isinstance(p1.x_range.start, float):
 				x_range_start = datetime.datetime.fromtimestamp(p1.x_range.start/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
 				x_range_end = datetime.datetime.fromtimestamp(p1.x_range.end/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
 				Sub_df2.drop(Sub_df2[Sub_df2['x'] < x_range_start].index, inplace=True)
@@ -423,7 +424,8 @@ def Electron_Energy_Graph(conn):
 			else:
 				Sub_df2.drop(Sub_df2[Sub_df2['x'] < p1.x_range.start].index, inplace=True)
 				Sub_df2.drop(Sub_df2[Sub_df2['x'] > p1.x_range.end].index, inplace=True)
-			if y_data1 == 'adate':
+
+			if y_data1 == 'adate' and isinstance(p1.y_range.start, float):
 				y_range_start = datetime.datetime.fromtimestamp(p1.y_range.start/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
 				y_range_end = datetime.datetime.fromtimestamp(p1.y_range.end/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
 				Sub_df2.drop(Sub_df2[Sub_df2['y'] < y_range_start].index, inplace=True)
