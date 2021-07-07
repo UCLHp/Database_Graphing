@@ -50,6 +50,7 @@ from scripts.JawTravel import JawTravel
 from scripts.FlexitronOutput import Flexitron_Output_Graph
 from scripts.Sym import Sym_Graph
 from scripts.ElectronOutput import Electron_Output_Graph
+from config import Config
 
 ###### Start of patch!
 ###### Need a fix for running the Tornado Server in Python 3.8 on Windows. This
@@ -80,16 +81,7 @@ def produce_doc(doc):
     tab scripts and compiling the tabs into one doccument
     '''
 
-    # Read config stuff
-    basedir = os.path.dirname(sys.argv[0])
-    print(basedir)
-    config_file = os.path.join(basedir, 'config_file.cfg')
-    config = ConfigParser()
-    config.read(config_file)
-
-    # Get database location from config file
-    database_path = config['Directories']['Database Path (Front End)']
-
+    database_path = Config.Main.database_path
     # Connect to the database.
     conn = pypyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
 							r'DBQ=' + database_path + ';'
@@ -107,24 +99,24 @@ def produce_doc(doc):
     # Create the tabs
     if choice == 'TrueBeam':
         # Create each tab by running the relevant scripts
-        tab1 = Photon_Output_Graph(conn)
-        tab2 = Electron_Energy_Graph(conn)
-        tab3 = Electron_Output_Graph(conn)
-        tab4 = Sym_Graph(conn)
+        tab1 = Photon_Output_Graph(conn, Config)
+        tab2 = Electron_Energy_Graph(conn, Config)
+        tab3 = Electron_Output_Graph(conn, Config)
+        tab4 = Sym_Graph(conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs = [tab1, tab2, tab3, tab4])
     elif choice == 'Proton':
-        tab1 = Photon_Output_Graph(conn)
-        tab2 = Flexitron_Output_Graph(conn)
-        tab3 = Gulmay_Output_Graph(conn)
+        tab1 = Photon_Output_Graph(conn, Config)
+        tab2 = Flexitron_Output_Graph(conn, Config)
+        tab3 = Gulmay_Output_Graph(conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs = [tab1, tab2, tab3])
     elif choice == 'Gulmay':
-        tab1 = Gulmay_Output_Graph(conn)
+        tab1 = Gulmay_Output_Graph(conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs = [tab1])
     elif choice == 'Flexitron':
-        tab1 = Flexitron_Output_Graph(conn)
+        tab1 = Flexitron_Output_Graph(conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs = [tab1])
     else:

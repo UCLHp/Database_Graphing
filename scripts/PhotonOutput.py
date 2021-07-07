@@ -124,7 +124,7 @@ def special_tolerance(color_to_plot, x_data1, y_data1, Sub_df1, df_tol1_qi):
 	return Sub_df1_tol1_qi
 
 
-def Photon_Output_Graph(conn):
+def Photon_Output_Graph(conn, Config):
 
 	'''
 	Create a graph for the Photon Output table from the Photon database
@@ -480,7 +480,7 @@ def Photon_Output_Graph(conn):
 
 		if ynbox(msg = 'Do you want to export the visible range or all data?', choices=('Visible Range', 'All Data')):
 
-			if x_data1 == 'adate' and isinstance(p1.x_range.start, float):
+			if x_data1 == 'adate' and (isinstance(p1.x_range.start, float) or isinstance(p1.x_range.start, int)):
 				x_range_start = datetime.datetime.fromtimestamp(p1.x_range.start/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
 				x_range_end = datetime.datetime.fromtimestamp(p1.x_range.end/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
 				Sub_df2.drop(Sub_df2[Sub_df2['x'] < x_range_start].index, inplace=True)
@@ -489,7 +489,7 @@ def Photon_Output_Graph(conn):
 				Sub_df2.drop(Sub_df2[Sub_df2['x'] < p1.x_range.start].index, inplace=True)
 				Sub_df2.drop(Sub_df2[Sub_df2['x'] > p1.x_range.end].index, inplace=True)
 
-			if y_data1 == 'adate' and isinstance(p1.y_range.start, float):
+			if y_data1 == 'adate' and (isinstance(p1.y_range.start, float) or isinstance(p1.y_range.start, int)):
 				y_range_start = datetime.datetime.fromtimestamp(p1.y_range.start/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
 				y_range_end = datetime.datetime.fromtimestamp(p1.y_range.end/1000.0).strftime('%Y-%m-%d %H:%M:%S.%f')
 				Sub_df2.drop(Sub_df2[Sub_df2['y'] < y_range_start].index, inplace=True)
