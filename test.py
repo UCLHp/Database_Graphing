@@ -1,7 +1,11 @@
+import tkinter as tk
+from tkinter.filedialog import asksaveasfilename
 
-
-location = '\\\\mpb-dc101\\rtp-share$\\protons\\Work in Progress\\Christian\\Database\\Photon\\sample.txt'
-
-text_file = open(location, 'w')
-n = text_file.write('Hello World 2')
-text_file.close()
+root = tk.Tk()
+root.withdraw()
+filepath = tk.filedialog.asksaveasfilename(filetypes=[("csv files", '*.csv')],
+    initialfile='graphing_export.csv', defaultextension = '.csv', initialdir = 'O:\\')
+print(filepath)
+if not filepath:  # asksaveasfile return `None` if dialog closed with "cancel".
+    print('hi')
+# defaultextension = '.csv'
