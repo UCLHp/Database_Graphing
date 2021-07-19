@@ -294,7 +294,7 @@ def Electron_Energy_Graph(conn, Config):
 	def callback_update():
 
 		# Make a new version of the dataframe
-		df = Create_df()
+		df = create_df()
 		df = add_legend_to_df(df, color_column, marker_column)
 
 		# Below here should be a copy of the main callback

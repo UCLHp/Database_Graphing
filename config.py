@@ -18,7 +18,7 @@ class Main(object):
     def __init__(self, config_file):
         ''' Initialise class '''
         # Get database location from config file
-        self.database_path = config_file['Directories']['Database Path (Front End)']
+        self.database_path_fe = config_file['Directories']['Database Path (Front End)']
 
 
 class Sym(object):

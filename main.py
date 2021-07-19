@@ -44,9 +44,7 @@ from functools import partial
 # Import the tab scripts.
 from scripts.GulmayOutput import Gulmay_Output_Graph
 from scripts.PhotonOutput import Photon_Output_Graph
-from scripts.ElectronEnergyOld import Electron_Energy_Graph_Old
 from scripts.ElectronEnergy import Electron_Energy_Graph
-from scripts.JawTravel import JawTravel
 from scripts.FlexitronOutput import Flexitron_Output_Graph
 from scripts.Sym import Sym_Graph
 from scripts.ElectronOutput import Electron_Output_Graph
@@ -81,10 +79,10 @@ def produce_doc(doc):
     tab scripts and compiling the tabs into one doccument
     '''
 
-    database_path = Config.Main.database_path
+    database_path_fe = Config.Main.database_path_fe
     # Connect to the database.
     conn = pypyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-							r'DBQ=' + database_path + ';'
+							r'DBQ=' + database_path_fe + ';'
                     		# r'PWD=JoNiSi;' # May need a line here for the database password????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
                     		)
 
@@ -94,10 +92,20 @@ def produce_doc(doc):
 
     # User interface
     choice = eg.buttonbox('Click on what you want to plot.', 'Graphing Code',
-        ('Proton', 'TrueBeam', 'Gulmay', 'Flexitron'))
+        ('All', 'TrueBeam', 'Gulmay', 'Flexitron'))
 
     # Create the tabs
-    if choice == 'TrueBeam':
+    if choice == 'All':
+        # Create each tab by running the relevant scripts
+        tab1 = Photon_Output_Graph(conn, Config)
+        tab2 = Electron_Energy_Graph(conn, Config)
+        tab3 = Electron_Output_Graph(conn, Config)
+        tab4 = Sym_Graph(conn, Config)
+        tab5 = Gulmay_Output_Graph(conn, Config)
+        tab6 = Flexitron_Output_Graph(conn, Config)
+        # Put all the tabs into one application
+        tabs = Tabs(tabs = [tab1, tab2, tab3, tab4, tab5, tab6])
+    elif choice == 'TrueBeam':
         # Create each tab by running the relevant scripts
         tab1 = Photon_Output_Graph(conn, Config)
         tab2 = Electron_Energy_Graph(conn, Config)
@@ -105,12 +113,6 @@ def produce_doc(doc):
         tab4 = Sym_Graph(conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs = [tab1, tab2, tab3, tab4])
-    elif choice == 'Proton':
-        tab1 = Photon_Output_Graph(conn, Config)
-        tab2 = Flexitron_Output_Graph(conn, Config)
-        tab3 = Gulmay_Output_Graph(conn, Config)
-        # Put all the tabs into one application
-        tabs = Tabs(tabs = [tab1, tab2, tab3])
     elif choice == 'Gulmay':
         tab1 = Gulmay_Output_Graph(conn, Config)
         # Put all the tabs into one application
@@ -209,9 +211,9 @@ if __name__ == '__main__':
     p = multiprocessing.Process(target=main)
     p.start()
 
-    # Wait for 600 seconds (10 mins) or until process finishes
-    delay = 600
-    interval = 300
+    # Wait for 1200 seconds (20 mins) or until process finishes
+    delay = 1200
+    interval = 600
     p.join(delay)
 
     while True:

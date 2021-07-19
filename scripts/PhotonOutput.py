@@ -158,8 +158,8 @@ def Photon_Output_Graph(conn, Config):
 		'cross', 'inverted_triangle', 'circle', 'triangle', 'asterisk']
 	# From the legend defined above give the values that will be pre-ticked when
 	# the plot is opened.
-	color_to_plot = ['6MV', '10MV']
-	marker_to_plot = ['TrueBeam B', 'TrueBeam C', 'TrueBeam D']
+	color_to_plot = ['6MV', '6XFFF', '10MV', '10XFFF']
+	marker_to_plot = ['TrueBeam B', 'TrueBeam C', 'TrueBeam D', 'TrueBeam F']
 
 	# Create a dataframe containing the data from the table
 	sql = 'SELECT [Protocol ID], [Energy], [chamber and electrometer], [Chamber factor], ' \
