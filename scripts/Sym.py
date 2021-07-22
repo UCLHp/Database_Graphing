@@ -59,10 +59,10 @@ def create_df(energy_selection, conn):
 		# Filter row with data = 0
 		df = df[df['g17 6mv'] !=0]
 		# Add difference in symmetry values to y-axis
-		df['inline_17'] = df['g17 6mv'] - df['t17 6mv']
-		df['crossline_17'] = df['a17 6mv'] - df['b17 6mv']
-		df['inline_9'] = df['g9 6mv'] - df['t9 6mv']
-		df['crossline_9'] = df['a9 6mv'] - df['b9 6mv']
+		df['inline_13'] = df['g17 6mv'] - df['t17 6mv']
+		df['crossline_13'] = df['a17 6mv'] - df['b17 6mv']
+		df['inline_6.5'] = df['g9 6mv'] - df['t9 6mv']
+		df['crossline_6.5'] = df['a9 6mv'] - df['b9 6mv']
 		df['flatness_gt'] = df['flatness 6mv gt']
 		df['flatness_ab'] = df['flatness 6mv ab']
 		df['inline_7'] = np.nan
@@ -76,10 +76,10 @@ def create_df(energy_selection, conn):
 		#filter row with data = 0
 		df = df[df['g17 10mv'] !=0]
 		#add difference in symmetry values to y-axis
-		df['inline_17'] = df['g17 10mv'] - df['t17 10mv']
-		df['crossline_17'] = df['a17 10mv'] - df['b17 10mv']
-		df['inline_9'] = df['g9 10mv'] - df['t9 10mv']
-		df['crossline_9'] = df['a9 10mv'] - df['b9 10mv']
+		df['inline_13'] = df['g17 10mv'] - df['t17 10mv']
+		df['crossline_13'] = df['a17 10mv'] - df['b17 10mv']
+		df['inline_6.5'] = df['g9 10mv'] - df['t9 10mv']
+		df['crossline_6.5'] = df['a9 10mv'] - df['b9 10mv']
 		df['flatness_gt'] = df['flatness 10mv gt']
 		df['flatness_ab'] = df['flatness 10mv ab']
 		df['inline_7'] = np.nan
@@ -93,10 +93,10 @@ def create_df(energy_selection, conn):
 		#filter row with data = 0
 		df = df[df['g17 6fff'] !=0]
 		#add difference in symmetry values to y-axis
-		df['inline_17'] = df['g17 6fff'] - df['t17 6fff']
-		df['crossline_17'] = df['a17 6fff'] - df['b17 6fff']
-		df['inline_9'] = df['g9 6fff'] - df['t9 6fff']
-		df['crossline_9'] = df['a9 6fff'] - df['b9 6fff']
+		df['inline_13'] = df['g17 6fff'] - df['t17 6fff']
+		df['crossline_13'] = df['a17 6fff'] - df['b17 6fff']
+		df['inline_6.5'] = df['g9 6fff'] - df['t9 6fff']
+		df['crossline_6.5'] = df['a9 6fff'] - df['b9 6fff']
 		df['flatness_gt'] = df['flatness 6fff gt']
 		df['flatness_ab'] = df['flatness 6fff ab']
 		df['inline_7'] = np.nan
@@ -110,10 +110,10 @@ def create_df(energy_selection, conn):
 		#filter row with data = 0
 		df = df[df['g17 10fff'] !=0]
 		#add difference in symmetry values to y-axis
-		df['inline_17'] = df['g17 10fff'] - df['t17 10fff']
-		df['crossline_17'] = df['a17 10fff'] - df['b17 10fff']
-		df['inline_9'] = df['g9 10fff'] - df['t9 10fff']
-		df['crossline_9'] = df['a9 10fff'] - df['b9 10fff']
+		df['inline_13'] = df['g17 10fff'] - df['t17 10fff']
+		df['crossline_13'] = df['a17 10fff'] - df['b17 10fff']
+		df['inline_6.5'] = df['g9 10fff'] - df['t9 10fff']
+		df['crossline_6.5'] = df['a9 10fff'] - df['b9 10fff']
 		df['flatness_gt'] = df['flatness 10fff gt']
 		df['flatness_ab'] = df['flatness 10fff ab']
 		df['inline_7'] = np.nan
@@ -130,10 +130,10 @@ def create_df(energy_selection, conn):
 		df['crossline_7'] = df['a7 6mev'] - df['b7 6mev']
 		df['flatness_gt'] = df['flatness 6mev gt']
 		df['flatness_ab'] = df['flatness 6mev ab']
-		df['inline_9'] = np.nan
-		df['crossline_9'] = np.nan
-		df['inline_17'] = np.nan
-		df['crossline_17'] = np.nan
+		df['inline_6.5'] = np.nan
+		df['crossline_6.5'] = np.nan
+		df['inline_13'] = np.nan
+		df['crossline_13'] = np.nan
 	elif energy_selection == '9MeV':
 		df = pd.read_sql('select [protocol id], [gantry angle], '\
 						'[g7 9mev], [t7 9mev], [a7 9mev],[b7 9mev], ' \
@@ -146,10 +146,10 @@ def create_df(energy_selection, conn):
 		df['crossline_7'] = df['a7 9mev'] - df['b7 9mev']
 		df['flatness_gt'] = df['flatness 9mev gt']
 		df['flatness_ab'] = df['flatness 9mev ab']
-		df['inline_9'] = np.nan
-		df['crossline_9'] = np.nan
-		df['inline_17'] = np.nan
-		df['crossline_17'] = np.nan
+		df['inline_6.5'] = np.nan
+		df['crossline_6.5'] = np.nan
+		df['inline_13'] = np.nan
+		df['crossline_13'] = np.nan
 	elif energy_selection == '12MeV':
 		df = pd.read_sql('select [protocol id], [gantry angle], '\
 						'[g7 12mev], [t7 12mev], [a7 12mev],[b7 12mev], ' \
@@ -162,10 +162,10 @@ def create_df(energy_selection, conn):
 		df['crossline_7'] = df['a7 12mev'] - df['b7 12mev']
 		df['flatness_gt'] = df['flatness 12mev gt']
 		df['flatness_ab'] = df['flatness 12mev ab']
-		df['inline_9'] = np.nan
-		df['crossline_9'] = np.nan
-		df['inline_17'] = np.nan
-		df['crossline_17'] = np.nan
+		df['inline_6.5'] = np.nan
+		df['crossline_6.5'] = np.nan
+		df['inline_13'] = np.nan
+		df['crossline_13'] = np.nan
 	elif energy_selection == '15MeV':
 		df = pd.read_sql('select [protocol id], [gantry angle], '\
 						'[g7 15mev], [t7 15mev], [a7 15mev],[b7 15mev], ' \
@@ -178,10 +178,10 @@ def create_df(energy_selection, conn):
 		df['crossline_7'] = df['a7 15mev'] - df['b7 15mev']
 		df['flatness_gt'] = df['flatness 15mev gt']
 		df['flatness_ab'] = df['flatness 15mev ab']
-		df['inline_9'] = np.nan
-		df['crossline_9'] = np.nan
-		df['inline_17'] = np.nan
-		df['crossline_17'] = np.nan
+		df['inline_6.5'] = np.nan
+		df['crossline_6.5'] = np.nan
+		df['inline_13'] = np.nan
+		df['crossline_13'] = np.nan
 	else:
 		eg.msgbox('Unknown energy entered. Raising system exit')
 		raise SystemExit
@@ -217,7 +217,7 @@ def Sym_Graph(conn, Config):
 
 	# Set default viewing option
 	x_data1 = 'adate'
-	y_data1 = 'crossline_17'
+	y_data1 = 'crossline_13'
 	plot_title1 = 'Symmetry'
 	x_axis_title1 = x_data1
 	y_axis_title1 = y_data1
@@ -260,11 +260,11 @@ def Sym_Graph(conn, Config):
 	# Create toleance dataframes.
 	if tolerance_boolean == True:
 		df_tol1 = pd.DataFrame({'adate':[df['adate'].max(), df['adate'].max()],
-								'crossline_17':[-1.5, 1.5],
-								'crossline_9':[-1.5, 1.5],
+								'crossline_13':[-1.5, 1.5],
+								'crossline_6.5':[-1.5, 1.5],
 								'crossline_7':[-1.5, 1.5],
-								'inline_17':[-1.5, 1.5],
-								'inline_9':[-1.5, 1.5],
+								'inline_13':[-1.5, 1.5],
+								'inline_6.5':[-1.5, 1.5],
 								'inline_7':[-1.5, 1.5]})
 
 		df_tol1_flat = pd.DataFrame({'adate':[df['adate'].max(), df['adate'].max()],
