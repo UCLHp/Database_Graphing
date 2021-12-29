@@ -9,12 +9,11 @@ from datetime import date
 
 from bokeh.models import (DatetimeTickFormatter, BasicTickFormatter)
 from bokeh.models.widgets import (CheckboxGroup, RangeSlider, Select,
-								  DateRangeSlider)
+                                  DateRangeSlider)
 from bokeh.palettes import turbo, Colorblind
 
 
 def Create_Select_Axis(TableFields, x_axis_title1, y_axis_title1):
-
 	'''
 	This function creates a select box widget that can be used to choose what is
 	plotted against the x and axis.
@@ -35,19 +34,17 @@ def Create_Select_Axis(TableFields, x_axis_title1, y_axis_title1):
 		menu_axis.append(field)
 	menu_axis = sorted(menu_axis)
 
-	select_xaxis = Select(  title = 'X-Axis Fields Available:',
-							value = x_axis_title1,
-							options = menu_axis	)
-	select_yaxis = Select(  title = 'Y-Axis Fields Available:',
-							value = y_axis_title1,
-							options = menu_axis	)
+	select_xaxis = Select(title='X-Axis Fields Available:',
+                       value=x_axis_title1,
+                       options=menu_axis	)
+	select_yaxis = Select(title='Y-Axis Fields Available:',
+                       value=y_axis_title1,
+                       options=menu_axis	)
 
 	return select_xaxis, select_yaxis
 
 
-
 def Create_Select_Legend(legend_location):
-
 	'''
 	This function creates a select box widget that can be used to choose  where the
 	legend displays on the graph.
@@ -58,19 +55,18 @@ def Create_Select_Legend(legend_location):
 	                          		data that is plotted on the x-axis.
 	'''
 
-	menu_legend = ['top_left', 'top_center', 'top_right', 'center_left', 'center', 'center_right', 'bottom_left', 'bottom_center', 'bottom_right']
+	menu_legend = ['top_left', 'top_center', 'top_right', 'center_left',
+                'center', 'center_right', 'bottom_left', 'bottom_center', 'bottom_right']
 
-	select_legend = Select( title = 'Legend Position',
-							value = legend_location,
-							options = menu_legend	)
+	select_legend = Select(title='Legend Position',
+                        value=legend_location,
+                        options=menu_legend	)
 
 	return select_legend
 
 
-
 def Create_Checkbox_Legend(df, color_column, color_to_plot, marker_column,
-		marker_to_plot):
-
+                           marker_to_plot):
 	'''
 	Creates two checkboxes for legend selection (one used for the item colour is
 	based on and the other for marker)
@@ -79,20 +75,50 @@ def Create_Checkbox_Legend(df, color_column, color_to_plot, marker_column,
 
 	'''
 
-	color_list = sorted(df[color_column].unique().tolist())
-	color_index = [i for i in range(len(color_list)) if color_list[i] in color_to_plot]
-	checkbox_color = CheckboxGroup(labels = color_list, active = color_index)
+	color_list = df[color_column].unique().tolist()
+	try:
+		color_list = [float(x) for x in color_list]
+		color_list = sorted(color_list)
+		to_int = True
+		for x in color_list:
+			if x.is_integer():
+				pass
+			else:
+				to_int = False
+		if to_int is True:
+			color_list = [str(int(x)) for x in color_list]
+		else:
+			color_list = [str(x) for x in color_list]
+	except ValueError:
+		color_list = sorted(color_list)
+	color_index = [i for i in range(
+		len(color_list)) if color_list[i] in color_to_plot]
+	checkbox_color = CheckboxGroup(labels=color_list, active=color_index)
 
-	marker_list = sorted(df[marker_column].unique().tolist())
-	marker_index = [i for i in range(len(marker_list)) if marker_list[i] in marker_to_plot]
-	checkbox_marker = CheckboxGroup(labels = marker_list, active = marker_index)
+	marker_list = df[marker_column].unique().tolist()
+	try:
+		marker_list = [float(x) for x in marker_list]
+		marker_list = sorted(marker_list)
+		to_int = True
+		for x in marker_list:
+			if x.is_integer():
+				pass
+			else:
+				to_int = False
+		if to_int is True:
+			marker_list = [str(int(x)) for x in marker_list]
+		else:
+			marker_list = [str(x) for x in marker_list]
+	except ValueError:
+		marker_list = sorted(marker_list)
+	marker_index = [i for i in range(
+		len(marker_list)) if marker_list[i] in marker_to_plot]
+	checkbox_marker = CheckboxGroup(labels=marker_list, active=marker_index)
 
 	return checkbox_color, checkbox_marker
 
 
-
 def Create_Checkbox_HoverTool(TableFields, hover_tool_fields):
-
 	'''
 	Creates a checkbox for hovertool selection with the options in TableFields
 
@@ -106,16 +132,16 @@ def Create_Checkbox_HoverTool(TableFields, hover_tool_fields):
 
 	hovertool_list = sorted(hovertool_list)
 
-	hovertool_index = [i for i in range(len(hovertool_list)) if hovertool_list[i] in hover_tool_fields]
+	hovertool_index = [i for i in range(
+		len(hovertool_list)) if hovertool_list[i] in hover_tool_fields]
 
-	checkbox_hovertool = CheckboxGroup(labels = hovertool_list, active = hovertool_index)
+	checkbox_hovertool = CheckboxGroup(
+		labels=hovertool_list, active=hovertool_index)
 
 	return checkbox_hovertool
 
 
-
 def Create_Range_Sliders():
-
 	'''
 	This function creates 4 range sliders for numerical data and also dates in
 	both the x and y axis.
@@ -123,28 +149,28 @@ def Create_Range_Sliders():
 	'''
 
 	range_slider_x = RangeSlider(	title='X-Axis Range', start=0, end=1,
-									value=(0,1), step=0.1	)
+                               value=(0, 1), step=0.1	)
 	range_slider_y = RangeSlider(	title='Y-Axis Range', start=0, end=1,
-									value=(0,1), step=0.1	)
-	range_slider_xdate = DateRangeSlider(	title = 'X-Axis Range (Date)',
-										start = date(2017,1,1),
-										end =  date(2017,1,2),
-										value = (date(2017,1,1),date(2017,1,2)),
-										step = 1	)
-	range_slider_ydate = DateRangeSlider(	title = 'Y-Axis Range (Date)',
-										start = date(2017,1,1),
-										end =  date(2017,1,2),
-										value = (date(2017,1,1),date(2017,1,2)),
-										step = 1	)
+                               value=(0, 1), step=0.1	)
+	range_slider_xdate = DateRangeSlider(	title='X-Axis Range (Date)',
+                                       start=date(2017, 1, 1),
+                                       end=date(2017, 1, 2),
+                                       value=(date(2017, 1, 1),
+                                              date(2017, 1, 2)),
+                                       step=1	)
+	range_slider_ydate = DateRangeSlider(	title='Y-Axis Range (Date)',
+                                       start=date(2017, 1, 1),
+                                       end=date(2017, 1, 2),
+                                       value=(date(2017, 1, 1),
+                                              date(2017, 1, 2)),
+                                       step=1	)
 
 	return (range_slider_x, range_slider_y, range_slider_xdate,
-		range_slider_ydate)
-
+         range_slider_ydate)
 
 
 def Update_Range_Sliders(x_data1, y_data1, Sub_df1, range_slider_x,
-		range_slider_y, range_slider_xdate, range_slider_ydate):
-
+                         range_slider_y, range_slider_xdate, range_slider_ydate):
 	'''
 	This function updates range sliders in the event that the data being plotted
 	on the x and y axis changes.
@@ -188,10 +214,8 @@ def Update_Range_Sliders(x_data1, y_data1, Sub_df1, range_slider_x,
 	return
 
 
-
 def Update_Range_Sliders_2(x_data1, y_data1, range_slider_x, range_slider_y,
-	range_slider_xdate, range_slider_ydate, p1):
-
+                           range_slider_xdate, range_slider_ydate, p1):
 	'''
 	This function updates range sliders in the event that the data being plotted
 	on the x and y axis changes.
@@ -220,7 +244,7 @@ def Update_Range_Sliders_2(x_data1, y_data1, range_slider_x, range_slider_y,
 	if x_data1 == 'adate':
 		range_slider_xdate.start = p1.x_range.start
 		range_slider_xdate.end = p1.x_range.end
-		range_slider_xdate.value = (p1.x_range.start,p1.x_range.end)
+		range_slider_xdate.value = (p1.x_range.start, p1.x_range.end)
 		range_slider_xdate.step = 1
 		range_slider_xdate.visible = True
 		range_slider_x.visible = False
@@ -235,11 +259,9 @@ def Update_Range_Sliders_2(x_data1, y_data1, range_slider_x, range_slider_y,
 	return
 
 
-
 def Update_HoverTool(hover1, x_data1, y_data1, Field1=None, Field2=None,
-		Field3=None, Field4=None, Field5=None, Field6=None, Field7=None,
-		Field8=None, Field9=None, Field10=None):
-
+                     Field3=None, Field4=None, Field5=None, Field6=None, Field7=None,
+                     Field8=None, Field9=None, Field10=None):
 	'''
 	This function updates the hovertool tooltips up to a maximum of the 2 axis
 	fields plus 10 additional fields
@@ -249,7 +271,7 @@ def Update_HoverTool(hover1, x_data1, y_data1, Field1=None, Field2=None,
 
 	FieldToolTips = []
 	FieldList = [Field1, Field2, Field3, Field4, Field5, Field6, Field7,
-		Field8, Field9, Field10]
+              Field8, Field9, Field10]
 
 	for x in FieldList:
 		if x != None:
@@ -260,30 +282,28 @@ def Update_HoverTool(hover1, x_data1, y_data1, Field1=None, Field2=None,
 			ToolTips = [('x_axis', '@x{%F}'), ('y_axis', '@y{%F}')]
 			ToolTips.extend(FieldToolTips)
 			hover1.tooltips = ToolTips
-			hover1.formatters = { '@x': 'datetime', '@y': 'datetime'}
+			hover1.formatters = {'@x': 'datetime', '@y': 'datetime'}
 		else:
 			ToolTips = [('x_axis', '@x{%F}'), ('y_axis', '@y')]
 			ToolTips.extend(FieldToolTips)
 			hover1.tooltips = ToolTips
-			hover1.formatters = { '@x': 'datetime', '@y': 'numeral'}
+			hover1.formatters = {'@x': 'datetime', '@y': 'numeral'}
 	else:
 		if y_data1 == 'adate':
 			ToolTips = [('x_axis', '@x'), ('y_axis', '@y{%F}')]
 			ToolTips.extend(FieldToolTips)
 			hover1.tooltips = ToolTips
-			hover1.formatters = { '@x': 'numeral', '@y': 'datetime'}
+			hover1.formatters = {'@x': 'numeral', '@y': 'datetime'}
 		else:
 			ToolTips = [('x_axis', '@x'), ('y_axis', '@y')]
 			ToolTips.extend(FieldToolTips)
 			hover1.tooltips = ToolTips
-			hover1.formatters = { '@x': 'numeral', '@y': 'numeral'}
+			hover1.formatters = {'@x': 'numeral', '@y': 'numeral'}
 
 	return
 
 
-
-def Define_Plot_Parameters (p1, list):
-
+def Define_Plot_Parameters(p1, list):
 	'''
 	This function sets all of the plot parameters
 
@@ -310,11 +330,11 @@ def Define_Plot_Parameters (p1, list):
 	# NB: This only works if 'adate' is used as the name for the date column
 	# and also that this is the only date column.
 	if list[0] == 'adate':
-		p1.xaxis.formatter = DatetimeTickFormatter(days = ['%d/%m', '%a%d'])
+		p1.xaxis.formatter = DatetimeTickFormatter(days=['%d/%m', '%a%d'])
 	else:
 		p1.xaxis.formatter = BasicTickFormatter()
 	if list[1] == 'adate':
-		p1.yaxis.formatter = DatetimeTickFormatter(days = ['%d/%m', '%a%d'])
+		p1.yaxis.formatter = DatetimeTickFormatter(days=['%d/%m', '%a%d'])
 	else:
 		p1.yaxis.formatter = BasicTickFormatter()
 
@@ -322,7 +342,6 @@ def Define_Plot_Parameters (p1, list):
 
 
 def add_legend_to_df(df, color_column, marker_column):
-
 	'''
 	Add a new legend column to the dataframe of the form marker_color
 
@@ -338,17 +357,15 @@ def add_legend_to_df(df, color_column, marker_column):
 			return str(str(row[marker_column]) + '_' + str(row[color_column]))
 
 	# Run the function.
-	df.loc[:,'legend'] = df.apply(lambda row: add_legend(row), axis=1)
-	df.loc[:,'color1'] = df.loc[:,color_column]
-	df.loc[:,'marker1'] = df.loc[:,marker_column]
+	df.loc[:, 'legend'] = df.apply(lambda row: add_legend(row), axis=1)
+	df.loc[:, 'color1'] = df.loc[:, color_column]
+	df.loc[:, 'marker1'] = df.loc[:, marker_column]
 	return df
 
 
-
 def Create_Legend(	df, color_column, custom_color_boolean,
-					custom_color_palette, marker_column,
-					custom_marker_boolean, custom_marker_palette	):
-
+                   custom_color_palette, marker_column,
+                   custom_marker_boolean, custom_marker_palette	):
 	'''
 	This function creates the columns and palettes needed for the legend
 
@@ -388,8 +405,8 @@ def Create_Legend(	df, color_column, custom_color_boolean,
 			color_palette = list(custom_color_palette[len(color_list)])
 		elif isinstance(custom_color_palette, tuple) or isinstance(custom_color_palette, list):
 			if len(color_list) > len(custom_color_palette):
-				print(	'Error - Not enough colors in custom palette to ' \
-						'assign a unique marker to each option.'	)
+				print(	'Error - Not enough colors in custom palette to '
+	                            'assign a unique marker to each option.'	)
 				exit()
 			color_palette = list(custom_color_palette)
 		else:
@@ -413,28 +430,29 @@ def Create_Legend(	df, color_column, custom_color_boolean,
 		marker_palette = custom_marker_palette
 	# Else use the default list
 	else:
-		marker_palette = [ 	'circle', 'square', 'triangle', 'diamond',
-							'inverted_triangle', 'hex',	'circle_cross',
-							'square_cross', 'diamond_cross', 'asterisk',
-							'cross', 'x', 'circle_x', 'square_x', 'dash'	]
+		marker_palette = ['circle', 'diamond', 'hex', 'inverted_triangle',
+	                   'plus', 'square', 'square_pin', 'triangle',
+	                   'triangle_pin', 'asterisk', 'cross', 'dash',
+	                   'x', 'y', 'circle_cross', 'diamond_cross',
+	                   'square_cross', 'circle_dot', 'diamond_dot',
+	                   'hex_dot', 'square_dot', 'triangle_dot',
+	                   'circle_x', 'square_x', 'circle_y', 'dot']
 
 	# Make sure there are enough markers to assign unique markers to each option
 	if len(marker_list) > len(marker_palette):
-		print(	'Error - Not enough markers to assign a unique marker to ' \
-				'each option.'	)
+		print(	'Error - Not enough markers to assign a unique marker to '
+	            'each option.'	)
 		exit()
 
 	# Add the legend column to the dataframe
 	df = add_legend_to_df(df, color_column, marker_column)
 
 	return (color_list, color_palette, marker_list, marker_palette, df,
-		add_legend_to_df)
-
+         add_legend_to_df)
 
 
 def Make_Dataset(df, color_column, color_to_plot, marker_column, marker_to_plot,
-		x_data1, y_data1):
-
+                 x_data1, y_data1):
 	'''
 	This function creates the sub-dataframe that will be used to form the
 	ColumnDataSource which will be plotted.
@@ -463,19 +481,16 @@ def Make_Dataset(df, color_column, color_to_plot, marker_column, marker_to_plot,
 	# them with 'x' and 'y'. Unless plotting the same data on both in which
 	# case add an extra column for 'y' that's a copy of 'x'.
 	if x_data1 == y_data1:
-		Sub_df1.rename(columns = {x_data1:'x'}, inplace = True)
-		Sub_df1.loc[:,'y'] = Sub_df1.loc[:,'x']
+		Sub_df1.rename(columns={x_data1: 'x'}, inplace=True)
+		Sub_df1.loc[:, 'y'] = Sub_df1.loc[:, 'x']
 	else:
-		Sub_df1.rename(columns = {x_data1:'x'}, inplace = True)
-		Sub_df1.rename(columns = {y_data1:'y'}, inplace = True)
+		Sub_df1.rename(columns={x_data1: 'x'}, inplace=True)
+		Sub_df1.rename(columns={y_data1: 'y'}, inplace=True)
 
 	return Sub_df1
 
 
-
-
 def Make_Dataset_Tolerance(x_data1, y_data1, Sub_df1, df_tol1):
-
 	'''
 	This function creates the sub-tolerance-dataframe that will be used to form
 	the ColumnDataSource which will plot the tolerances.
@@ -498,8 +513,8 @@ def Make_Dataset_Tolerance(x_data1, y_data1, Sub_df1, df_tol1):
 		# can be plotted for the full range.
 		if x_data1 == 'adate':
 			# Add a little time to either side to make it look nicer.
-			max_x = Sub_df1['x'].max() + pd.DateOffset(weeks = 2)
-			min_x = Sub_df1['x'].min() + pd.DateOffset(weeks = -2)
+			max_x = Sub_df1['x'].max() + pd.DateOffset(weeks=2)
+			min_x = Sub_df1['x'].min() + pd.DateOffset(weeks=-2)
 		else:
 			# Add 5% of range to either side to make it look nicer.
 			range = Sub_df1['x'].max() - Sub_df1['x'].min()
@@ -515,37 +530,26 @@ def Make_Dataset_Tolerance(x_data1, y_data1, Sub_df1, df_tol1):
 			for x in headers1:
 				if y_data1 == x:
 					data = {'x': [min_x, max_x],
-							'y_low': [df_tol1[x][0], df_tol1[x][0]],
-							'y_high': [df_tol1[x][1], df_tol1[x][1]]}
+	                                    'y_low': [df_tol1[x][0], df_tol1[x][0]],
+	                                    'y_high': [df_tol1[x][1], df_tol1[x][1]]}
 					Sub_df1_tol1 = pd.DataFrame(data)
 		else:
 			# y_data isn't in the list so output something that won't plot and
 			# also won't throw the viewing range.
 			data = {'x': [Sub_df1['x'].max(), Sub_df1['x'].max()],
-					'y_low': [Sub_df1['y'].max(), Sub_df1['y'].max()],
-					'y_high': [Sub_df1['y'].max(), Sub_df1['y'].max()]}
+	                    'y_low': [Sub_df1['y'].max(), Sub_df1['y'].max()],
+	                    'y_high': [Sub_df1['y'].max(), Sub_df1['y'].max()]}
 			Sub_df1_tol1 = pd.DataFrame(data)
 
 	else:
 		# x_data isn't in the list so output something that won't plot and
 		# also won't throw the viewing range.
 		data = {'x': [Sub_df1['x'].max(), Sub_df1['x'].max()],
-				'y_low': [Sub_df1['y'].max(), Sub_df1['y'].max()],
-				'y_high': [Sub_df1['y'].max(), Sub_df1['y'].max()]}
+	         'y_low': [Sub_df1['y'].max(), Sub_df1['y'].max()],
+	         'y_high': [Sub_df1['y'].max(), Sub_df1['y'].max()]}
 		Sub_df1_tol1 = pd.DataFrame(data)
 
 	return Sub_df1_tol1
-
-
-
-
-
-
-
-
-
-
-
 
 
 #

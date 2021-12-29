@@ -12,65 +12,59 @@ Access driver therefore this code will only work with 32-bit python.
 
 '''
 
-####################### IMPORT LIBRARIES AND SCRIPTS ###########################
+####################### IMPORT LIBRARIES AND SCRIPTS ##########################
 
-print('\nImporting libraries...')
-
-# Import time and start a timer
-import time
-start = time.time()
-
-# Import some basic tools from easygui to allow for user interface
-import easygui as eg
-import pandas as pd
-import pypyodbc
 import os
-import webbrowser
-import multiprocessing
-
-# For reading config files
-from configparser import ConfigParser
+import sys
+import time
 
 # Import some stuff from bokeh and tornado libraries to maniulate tabs and
 # create/run the server.
-from bokeh.io import curdoc
-from bokeh.models.widgets import Tabs
-from bokeh.server.server import Server
-from bokeh.application.handlers import FunctionHandler
-from bokeh.application import Application
 from tornado.ioloop import IOLoop
+from bokeh.application import Application
+from bokeh.application.handlers import FunctionHandler
+from bokeh.server.server import Server
+from bokeh.models.widgets import Tabs
+from bokeh.io import curdoc
+
+# Import some other libraries
 from functools import partial
+from configparser import ConfigParser
+import multiprocessing
+import asyncio
+import webbrowser
+import pypyodbc
+import pandas as pd
+import easygui as eg
 
 # Import the tab scripts.
-from scripts.GulmayOutput import Gulmay_Output_Graph
-from scripts.PhotonOutput import Photon_Output_Graph
-from scripts.ElectronEnergy import Electron_Energy_Graph
-from scripts.FlexitronOutput import Flexitron_Output_Graph
-from scripts.Sym import Sym_Graph
+from scripts.PBT_Isocentre import pbt_isocentre_graph
 from scripts.ElectronOutput import Electron_Output_Graph
+from scripts.Sym import Sym_Graph
+from scripts.FlexitronOutput import Flexitron_Output_Graph
+from scripts.ElectronEnergy import Electron_Energy_Graph
+from scripts.PhotonOutput import Photon_Output_Graph
+from scripts.GulmayOutput import Gulmay_Output_Graph
 from config import Config
 
-###### Start of patch!
-###### Need a fix for running the Tornado Server in Python 3.8 on Windows. This
-###### piece of code seems to allow it to run correctly (something about
-###### needing to change a Windows default?):
-######          https://github.com/tornadoweb/tornado/issues/2751
-######          https://github.com/tornadoweb/tornado/issues/2608
-import sys
-import asyncio
+# Import time and start a timer
+start = time.time()
+
+# Start of patch!
+# Need a fix for running the Tornado Server in Python 3.8 on Windows. This
+# piece of code seems to allow it to run correctly (something about needing
+# to change a Windows default?):
+#          https://github.com/tornadoweb/tornado/issues/2751
+#          https://github.com/tornadoweb/tornado/issues/2608
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-###### End of patch!
+# End of patch!
 
-endlib = time.time()
-print('\nLibraries loaded in: ' + str(endlib - start) + 'sec')
 
-################################################################################
-
+###############################################################################
 
 
 def produce_doc(doc):
-
     '''
     This function produces the doccument containing all of the graphs, which
     is later called by the main function.
@@ -79,48 +73,58 @@ def produce_doc(doc):
     tab scripts and compiling the tabs into one doccument
     '''
 
-    database_path_fe = Config.Main.database_path_fe
+    photon_db_path_fe = Config.Main.photon_db_path_fe
+    proton_db_path_fe = Config.Main.proton_db_path_fe
     # Connect to the database.
-    conn = pypyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-							r'DBQ=' + database_path_fe + ';'
-                    		# r'PWD=JoNiSi;' # May need a line here for the database password????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
-                    		)
+    photon_conn = pypyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
+                                   r'DBQ=' + photon_db_path_fe + ';'
+                                   # r'PWD=JoNiSi;' # May need a line here for the database password????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+                                   )
+    proton_conn = pypyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
+                                   r'DBQ=' + proton_db_path_fe + ';'
+                                   # r'PWD=JoNiSi;' # May need a line here for the database password????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+                                   )
 
     # With the connection made run a check to find out how long it took.
     endconn = time.time()
-    print('\nConnection made in: ' + str(endconn - endlib) + 'sec')
+    print('\nConnection made in: ' + str(endconn - start) + 'sec')
 
     # User interface
     choice = eg.buttonbox('Click on what you want to plot.', 'Graphing Code',
-        ('All', 'TrueBeam', 'Gulmay', 'Flexitron'))
+                          ('All', 'Proton', 'TrueBeam', 'Gulmay', 'Flexitron'))
 
     # Create the tabs
     if choice == 'All':
         # Create each tab by running the relevant scripts
-        tab1 = Photon_Output_Graph(conn, Config)
-        tab2 = Electron_Energy_Graph(conn, Config)
-        tab3 = Electron_Output_Graph(conn, Config)
-        tab4 = Sym_Graph(conn, Config)
-        tab5 = Gulmay_Output_Graph(conn, Config)
-        tab6 = Flexitron_Output_Graph(conn, Config)
+        tab1 = Photon_Output_Graph(photon_conn, Config)
+        tab2 = Electron_Energy_Graph(photon_conn, Config)
+        tab3 = Electron_Output_Graph(photon_conn, Config)
+        tab4 = Sym_Graph(photon_conn, Config)
+        tab5 = Gulmay_Output_Graph(photon_conn, Config)
+        tab6 = Flexitron_Output_Graph(photon_conn, Config)
         # Put all the tabs into one application
-        tabs = Tabs(tabs = [tab1, tab2, tab3, tab4, tab5, tab6])
+        tabs = Tabs(tabs=[tab1, tab2, tab3, tab4, tab5, tab6])
+    elif choice == 'Proton':
+        # Create each tab by running the relevant scripts
+        tab1 = pbt_isocentre_graph(proton_conn, Config)
+        # Put all the tabs into one application
+        tabs = Tabs(tabs=[tab1])
     elif choice == 'TrueBeam':
         # Create each tab by running the relevant scripts
-        tab1 = Photon_Output_Graph(conn, Config)
-        tab2 = Electron_Energy_Graph(conn, Config)
-        tab3 = Electron_Output_Graph(conn, Config)
-        tab4 = Sym_Graph(conn, Config)
+        tab1 = Photon_Output_Graph(photon_conn, Config)
+        tab2 = Electron_Energy_Graph(photon_conn, Config)
+        tab3 = Electron_Output_Graph(photon_conn, Config)
+        tab4 = Sym_Graph(photon_conn, Config)
         # Put all the tabs into one application
-        tabs = Tabs(tabs = [tab1, tab2, tab3, tab4])
+        tabs = Tabs(tabs=[tab1, tab2, tab3, tab4])
     elif choice == 'Gulmay':
-        tab1 = Gulmay_Output_Graph(conn, Config)
+        tab1 = Gulmay_Output_Graph(photon_conn, Config)
         # Put all the tabs into one application
-        tabs = Tabs(tabs = [tab1])
+        tabs = Tabs(tabs=[tab1])
     elif choice == 'Flexitron':
-        tab1 = Flexitron_Output_Graph(conn, Config)
+        tab1 = Flexitron_Output_Graph(photon_conn, Config)
         # Put all the tabs into one application
-        tabs = Tabs(tabs = [tab1])
+        tabs = Tabs(tabs=[tab1])
     else:
         eg.msgbox('Error')
         exit()
@@ -128,11 +132,10 @@ def produce_doc(doc):
     # Put all of the tabs into the doccument
     doc.add_root(tabs)
 
-    endconn = time.time()
-    print('\nTabs made in: ' + str(endconn - endlib) + 'sec')
+    endtabs = time.time()
+    print('\nTabs made in: ' + str(endtabs - endconn) + 'sec')
 
     return doc
-
 
 
 def main():
@@ -157,13 +160,15 @@ def main():
     except:
         # If connection fails then look in a couple of typical locations for chrome
         if os.path.isfile("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"):
-            chrome_path="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-            webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+            chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+            webbrowser.register(
+                'chrome', None, webbrowser.BackgroundBrowser(chrome_path))
             chrome = webbrowser.get('chrome')
             found_chrome = True
         elif os.path.isfile("C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"):
-            chrome_path="C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-            webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+            chrome_path = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+            webbrowser.register(
+                'chrome', None, webbrowser.BackgroundBrowser(chrome_path))
             chrome = webbrowser.get('chrome')
             found_chrome = True
         else:
@@ -172,7 +177,7 @@ def main():
     # Start an Input/Output Loop. (Specifically a Tornado asynchronous I/O Loop)
     io_loop = IOLoop.current()
     port = 5001
-    kwargs = {'io_loop': io_loop, 'port': port,}
+    kwargs = {'io_loop': io_loop, 'port': port, }
 
     # Define the application using the bokeh application function handler.
     # https://docs.bokeh.org/en/latest/docs/reference/application/handlers/function.html
@@ -180,7 +185,7 @@ def main():
 
     # http://matthewrocklin.com/blog/work/2017/06/28/simple-bokeh-server
     try:
-        server = Server({'/' : app},  **kwargs)
+        server = Server({'/': app},  **kwargs)
         server.start()
         print('\nOpening Bokeh application on http://localhost:5001/')
 
@@ -193,12 +198,11 @@ def main():
     except OSError:
         url = 'http://localhost:5001'
         if found_chrome:
-            chrome.open_new_tab(url);
+            chrome.open_new_tab(url)
         else:
             webbrowser.open_new_tab(url)
 
     return
-
 
 
 if __name__ == '__main__':
@@ -224,25 +228,6 @@ if __name__ == '__main__':
             else:
                 delay = delay + interval
                 time.sleep(interval)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #
