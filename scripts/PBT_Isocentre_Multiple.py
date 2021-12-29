@@ -24,7 +24,7 @@ from bokeh.models import (CategoricalColorMapper, HoverTool, BoxZoomTool,
 from bokeh.models.widgets import (CheckboxGroup, Slider, RangeSlider,
                                   Tabs, CheckboxButtonGroup, Dropdown,
                                   TableColumn, DataTable, Select,
-                                  DateRangeSlider, Button, RadioButtonGroup)
+                                  DateRangeSlider, Button)
 from bokeh.layouts import column, row, WidgetBox, layout
 from bokeh.palettes import turbo, Colorblind
 import bokeh.colors
@@ -53,6 +53,7 @@ def create_df(sql, conn):
     # Delete empty rows where the data is very important to have
     df = df.dropna(subset=['adate'], how='any')
     df = df.dropna(subset=['machinename'], how='any')
+    df = df[df['machinename'].isin(['Gantry 1'])]
 
     # Set data types correctly
     df.loc[:, 'adate'] = pd.to_datetime(df.loc[:, 'adate'], dayfirst=True)
@@ -176,14 +177,10 @@ def pbt_isocentre_graph(conn, Config):
 
     # Dropdown list to change the legend position.
     select_legend = Create_Select_Legend(legend_location)
-
     # Checkbox widgets used to create a tool to select the 'color' and 'marker'
     # that are being plotted.
     checkbox_color, checkbox_marker = Create_Checkbox_Legend(
         df, color_column, color_to_plot, marker_column, marker_to_plot)
-
-    select_gantry = RadioButtonGroup(
-        labels=['Gantry 1', 'Gantry 2', 'Gantry 3', 'Gantry 4'], active=0)
 
     # Checkbox widget used to select hovertool fields
     checkbox_hovertool = Create_Checkbox_HoverTool(
@@ -214,8 +211,8 @@ def pbt_isocentre_graph(conn, Config):
                                   checkbox_marker])
     button_row1 = row([update_button, range_button])
     button_row2 = row([quit_button, export_button])
-    layout_plots = column([button_row1, button_row2, select_gantry,
-                           select_xaxis, select_yaxis, select_legend, p1])
+    layout_plots = column([button_row1, button_row2, select_xaxis,
+                           select_yaxis, select_legend, p1])
     tab_layout = row([layout_plots, layout_checkbox])
 
     # ##################### CREATE CALLBACK FUNCTIONS #########################
@@ -235,7 +232,6 @@ def pbt_isocentre_graph(conn, Config):
         plot1_xdata_to_plot = select_xaxis.value
         plot1_ydata_to_plot = select_yaxis.value
         legend_location = select_legend.value
-        gantry = select_gantry.labels[select_gantry.active]
 
         # Set the new axis titles
         x_axis_title1 = plot1_xdata_to_plot
@@ -245,7 +241,7 @@ def pbt_isocentre_graph(conn, Config):
         Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
                                 marker_to_plot, plot1_xdata_to_plot,
                                 plot1_ydata_to_plot)
-        Sub_df1 = Sub_df1[Sub_df1['machinename'].isin([gantry])]
+        print(Sub_df1)
         # Update the plot.
         Define_Plot_Parameters(p1, [plot1_xdata_to_plot, plot1_ydata_to_plot,
                                     plot_title1, x_axis_title1, y_axis_title1,
@@ -281,7 +277,6 @@ def pbt_isocentre_graph(conn, Config):
     select_xaxis.on_change('value', callback)
     select_yaxis.on_change('value', callback)
     select_legend.on_change('value', callback)
-    select_gantry.on_change('active', callback)
     checkbox_color.on_change('active', callback)
     checkbox_marker.on_change('active', callback)
     checkbox_hovertool.on_change('active', callback)
@@ -306,15 +301,10 @@ def pbt_isocentre_graph(conn, Config):
         x_axis_title1 = plot1_xdata_to_plot
         y_axis_title1 = plot1_ydata_to_plot
         legend_location = select_legend.value
-        gantry = select_gantry.labels[select_gantry.active]
-        print(gantry)
 
         Sub_df1 = Make_Dataset(	df, color_column, color_to_plot, marker_column,
                                 marker_to_plot, plot1_xdata_to_plot,
                                 plot1_ydata_to_plot)
-        print(Sub_df1)
-        Sub_df1 = Sub_df1[Sub_df1['machinename'].isin([gantry])]
-        print(Sub_df1)
 
         Define_Plot_Parameters(p1, [plot1_xdata_to_plot, plot1_ydata_to_plot,
                                     plot_title1, x_axis_title1, y_axis_title1,
@@ -395,7 +385,6 @@ def pbt_isocentre_graph(conn, Config):
         x_data1 = select_xaxis.value
         y_data1 = select_yaxis.value
 
-        Sub_df1 = pd.DataFrame(src1.data)
         Sub_df2 = Sub_df1.copy()
         Sub_df2[x_data1] = Sub_df2['x']
         Sub_df2[y_data1] = Sub_df2['y']
@@ -445,7 +434,7 @@ def pbt_isocentre_graph(conn, Config):
 
         return
 
-    export_button.on_click(callback_export)
+        export_button.on_click(callback_export)
 
     # Return the panel to the main script
     return Panel(child=tab_layout, title='PBT Isocentre')

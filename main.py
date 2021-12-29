@@ -38,7 +38,7 @@ import pandas as pd
 import easygui as eg
 
 # Import the tab scripts.
-from scripts.PBT_Isocentre import PBT_Isocentre_Graph
+from scripts.PBT_Isocentre import pbt_isocentre_graph
 from scripts.ElectronOutput import Electron_Output_Graph
 from scripts.Sym import Sym_Graph
 from scripts.FlexitronOutput import Flexitron_Output_Graph
@@ -101,7 +101,7 @@ def produce_doc(doc):
         tabs = Tabs(tabs=[tab1, tab2, tab3, tab4, tab5, tab6])
     elif choice == 'Proton':
         # Create each tab by running the relevant scripts
-        tab1 = PBT_Isocentre_Graph(conn, Config)
+        tab1 = pbt_isocentre_graph(conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs=[tab1])
     elif choice == 'TrueBeam':
