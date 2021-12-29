@@ -12,7 +12,7 @@ Access driver therefore this code will only work with 32-bit python.
 
 '''
 
-####################### IMPORT LIBRARIES AND SCRIPTS ###########################
+####################### IMPORT LIBRARIES AND SCRIPTS ##########################
 
 import os
 import sys
@@ -50,18 +50,18 @@ from config import Config
 # Import time and start a timer
 start = time.time()
 
-###### Start of patch!
-###### Need a fix for running the Tornado Server in Python 3.8 on Windows. This
-###### piece of code seems to allow it to run correctly (something about
-###### needing to change a Windows default?):
-######          https://github.com/tornadoweb/tornado/issues/2751
-######          https://github.com/tornadoweb/tornado/issues/2608
+# Start of patch!
+# Need a fix for running the Tornado Server in Python 3.8 on Windows. This
+# piece of code seems to allow it to run correctly (something about needing
+# to change a Windows default?):
+#          https://github.com/tornadoweb/tornado/issues/2751
+#          https://github.com/tornadoweb/tornado/issues/2608
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-###### End of patch!
+# End of patch!
 
 
-################################################################################
+###############################################################################
 
 
 def produce_doc(doc):
@@ -73,12 +73,17 @@ def produce_doc(doc):
     tab scripts and compiling the tabs into one doccument
     '''
 
-    database_path_fe = Config.Main.database_path_fe
+    photon_db_path_fe = Config.Main.photon_db_path_fe
+    proton_db_path_fe = Config.Main.proton_db_path_fe
     # Connect to the database.
-    conn = pypyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-                            r'DBQ=' + database_path_fe + ';'
-                            # r'PWD=JoNiSi;' # May need a line here for the database password????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
-                            )
+    photon_conn = pypyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
+                                   r'DBQ=' + photon_db_path_fe + ';'
+                                   # r'PWD=JoNiSi;' # May need a line here for the database password????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+                                   )
+    proton_conn = pypyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
+                                   r'DBQ=' + proton_db_path_fe + ';'
+                                   # r'PWD=JoNiSi;' # May need a line here for the database password????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+                                   )
 
     # With the connection made run a check to find out how long it took.
     endconn = time.time()
@@ -91,33 +96,33 @@ def produce_doc(doc):
     # Create the tabs
     if choice == 'All':
         # Create each tab by running the relevant scripts
-        tab1 = Photon_Output_Graph(conn, Config)
-        tab2 = Electron_Energy_Graph(conn, Config)
-        tab3 = Electron_Output_Graph(conn, Config)
-        tab4 = Sym_Graph(conn, Config)
-        tab5 = Gulmay_Output_Graph(conn, Config)
-        tab6 = Flexitron_Output_Graph(conn, Config)
+        tab1 = Photon_Output_Graph(photon_conn, Config)
+        tab2 = Electron_Energy_Graph(photon_conn, Config)
+        tab3 = Electron_Output_Graph(photon_conn, Config)
+        tab4 = Sym_Graph(photon_conn, Config)
+        tab5 = Gulmay_Output_Graph(photon_conn, Config)
+        tab6 = Flexitron_Output_Graph(photon_conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs=[tab1, tab2, tab3, tab4, tab5, tab6])
     elif choice == 'Proton':
         # Create each tab by running the relevant scripts
-        tab1 = pbt_isocentre_graph(conn, Config)
+        tab1 = pbt_isocentre_graph(proton_conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs=[tab1])
     elif choice == 'TrueBeam':
         # Create each tab by running the relevant scripts
-        tab1 = Photon_Output_Graph(conn, Config)
-        tab2 = Electron_Energy_Graph(conn, Config)
-        tab3 = Electron_Output_Graph(conn, Config)
-        tab4 = Sym_Graph(conn, Config)
+        tab1 = Photon_Output_Graph(photon_conn, Config)
+        tab2 = Electron_Energy_Graph(photon_conn, Config)
+        tab3 = Electron_Output_Graph(photon_conn, Config)
+        tab4 = Sym_Graph(photon_conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs=[tab1, tab2, tab3, tab4])
     elif choice == 'Gulmay':
-        tab1 = Gulmay_Output_Graph(conn, Config)
+        tab1 = Gulmay_Output_Graph(photon_conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs=[tab1])
     elif choice == 'Flexitron':
-        tab1 = Flexitron_Output_Graph(conn, Config)
+        tab1 = Flexitron_Output_Graph(photon_conn, Config)
         # Put all the tabs into one application
         tabs = Tabs(tabs=[tab1])
     else:
