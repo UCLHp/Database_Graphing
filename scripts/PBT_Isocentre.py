@@ -83,7 +83,7 @@ def pbt_isocentre_graph(conn, Config):
     plot_size_height1 = 500
     plot_size_width1 = 800
     legend_location = 'bottom_left'
-    hover_tool_fields = ['ga', 'energy']
+    hover_tool_fields = ['energy', 'ga']
     # Create a list of the plot parameters
     list_plot_parameters = [x_data1, y_data1, plot_title1, x_axis_title1,
                             y_axis_title1, plot_size_height1, plot_size_width1,

@@ -390,7 +390,22 @@ def Create_Legend(	df, color_column, custom_color_boolean,
 
 	######### Colors:
 	# Create a list of unique values
-	color_list = sorted(df[color_column].unique().tolist())
+	color_list = df[color_column].unique().tolist()
+	try:
+		color_list = [float(x) for x in color_list]
+		color_list = sorted(color_list)
+		to_int = True
+		for x in color_list:
+			if x.is_integer():
+				pass
+			else:
+				to_int = False
+		if to_int is True:
+			color_list = [str(int(x)) for x in color_list]
+		else:
+			color_list = [str(x) for x in color_list]
+	except ValueError:
+		color_list = sorted(color_list)
 	# Using custom set?
 	# NB: Custom set can be entered as fuction (e.g. turbo), a dictionary (e.g.
 	# Colorblind) or a list (e.g. a user specified list of hex values).
@@ -423,7 +438,22 @@ def Create_Legend(	df, color_column, custom_color_boolean,
 
 	######### Markers:
 	# Create a list of unique values
-	marker_list = sorted(df[marker_column].unique().tolist())
+	marker_list = df[marker_column].unique().tolist()
+	try:
+		marker_list = [float(x) for x in marker_list]
+		marker_list = sorted(marker_list)
+		to_int = True
+		for x in marker_list:
+			if x.is_integer():
+				pass
+			else:
+				to_int = False
+		if to_int is True:
+			marker_list = [str(int(x)) for x in marker_list]
+		else:
+			marker_list = [str(x) for x in marker_list]
+	except ValueError:
+		marker_list = sorted(marker_list)
 
 	# If a custom marker is to be used then set it as the marker_palette
 	if custom_marker_boolean == True:
@@ -432,8 +462,8 @@ def Create_Legend(	df, color_column, custom_color_boolean,
 	else:
 		marker_palette = ['circle', 'diamond', 'hex', 'inverted_triangle',
 	                   'plus', 'square', 'square_pin', 'triangle',
-	                   'triangle_pin', 'asterisk', 'cross', 'dash',
-	                   'x', 'y', 'circle_cross', 'diamond_cross',
+	                   'triangle_pin', 'asterisk', 'cross', 'x', 'y',
+	                   'dash', 'circle_cross', 'diamond_cross',
 	                   'square_cross', 'circle_dot', 'diamond_dot',
 	                   'hex_dot', 'square_dot', 'triangle_dot',
 	                   'circle_x', 'square_x', 'circle_y', 'dot']
