@@ -31,6 +31,10 @@ This code has been written to interact with a 32-bit version of Microsoft Access
 
 Package requirements can be found within the requirements.txt file. As mentioned above it must be used with a 32-bit version of Python3 and consideration should be given to installing within a virtual environment that allows for this.
 
+### Packaging as an Executable
+
+Can be compiled as an executable using pyinstaller. If so the bokeh folder in the enviroment should be copied into the dist folder. The config_file should also be copied over as pyinstaller fails to do this and the executable will error out otherwise.
+
 
 ## Usage
 
