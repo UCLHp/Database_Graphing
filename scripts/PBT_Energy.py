@@ -281,7 +281,7 @@ def pbt_energy_graph(conn, Config):
                            width=int(plot_size_width1/2))
     # Titles for the checkboxes
     color_title = Div(text='<b>Energy Choice (MeV)</b>')
-    marker_title = Div(text='<b>Gantry Angle Choice</b>')
+    marker_title = Div(text='<b>Machine Name Choice</b>')
     hover_title = Div(text='<b>Hovertool Fields</b>')
 
     # Create a layout
