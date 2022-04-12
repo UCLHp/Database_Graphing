@@ -39,6 +39,7 @@ import easygui as eg
 
 # Import the tab scripts.
 from scripts.PBT_Isocentre import pbt_isocentre_graph
+from scripts.PBT_Energy import pbt_energy_graph
 from scripts.ElectronOutput import Electron_Output_Graph
 from scripts.Sym import Sym_Graph
 from scripts.FlexitronOutput import Flexitron_Output_Graph
@@ -75,6 +76,7 @@ def produce_doc(doc):
 
     photon_db_path_fe = Config.Main.photon_db_path_fe
     proton_db_path_fe = Config.Main.proton_db_path_fe
+    print(proton_db_path_fe)
     # Connect to the database.
     photon_conn = pypyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
                                    r'DBQ=' + photon_db_path_fe + ';'
@@ -107,8 +109,9 @@ def produce_doc(doc):
     elif choice == 'Proton':
         # Create each tab by running the relevant scripts
         tab1 = pbt_isocentre_graph(proton_conn, Config)
+        tab2 = pbt_energy_graph(proton_conn, Config)
         # Put all the tabs into one application
-        tabs = Tabs(tabs=[tab1])
+        tabs = Tabs(tabs=[tab1, tab2])
     elif choice == 'TrueBeam':
         # Create each tab by running the relevant scripts
         tab1 = Photon_Output_Graph(photon_conn, Config)

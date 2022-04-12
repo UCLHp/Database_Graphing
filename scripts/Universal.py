@@ -483,41 +483,41 @@ def Create_Legend(	df, color_column, custom_color_boolean,
 
 def Make_Dataset(df, color_column, color_to_plot, marker_column, marker_to_plot,
                  x_data1, y_data1):
-	'''
-	This function creates the sub-dataframe that will be used to form the
-	ColumnDataSource which will be plotted.
+    '''
+    This function creates the sub-dataframe that will be used to form the
+    ColumnDataSource which will be plotted.
 
-	Inputs:	df = 	The main dataframe pulled from the database
-			color_to_plot =	The items that the colors are based off which are to
-								be plotted (either as default opening choices or
-								through callbacks)
-			marker_to_plot = As above but for markers
-			x_data1 =	The column name that matches the data to be plotted
-						against the x-axis
-			y_data1 = 	As above but for the y-axis
+    Inputs:	df = 	The main dataframe pulled from the database
+            color_to_plot =	The items that the colors are based off which are to
+                            be plotted (either as default opening choices or
+                            through callbacks)
+            marker_to_plot = As above but for markers
+            x_data1 =	The column name that matches the data to be plotted
+                        against the x-axis
+            y_data1 = 	As above but for the y-axis
 
-	Outputs:	Sub_df1 =	The sub-dataframe that will be used to form the
-							ColumnDataSource which will be plotted. Filtered
-							for the color and marker and with the column names
-							replaced with 'x' and 'y'
-	'''
+            Outputs:	Sub_df1 =	The sub-dataframe that will be used to form the
+                            ColumnDataSource which will be plotted. Filtered
+                            for the color and marker and with the column names
+                            replaced with 'x' and 'y'
+    '''
 
-	# Copy the main dataframe
-	Sub_df1 = df.copy()
-	# Delete any rows that do not exist in the checkboxes/default user choices.
-	Sub_df1 = Sub_df1[Sub_df1[color_column].isin(color_to_plot)]
-	Sub_df1 = Sub_df1[Sub_df1[marker_column].isin(marker_to_plot)]
-	# Search for the columns with the x_data and y_data names and replace
-	# them with 'x' and 'y'. Unless plotting the same data on both in which
-	# case add an extra column for 'y' that's a copy of 'x'.
-	if x_data1 == y_data1:
-		Sub_df1.rename(columns={x_data1: 'x'}, inplace=True)
-		Sub_df1.loc[:, 'y'] = Sub_df1.loc[:, 'x']
-	else:
-		Sub_df1.rename(columns={x_data1: 'x'}, inplace=True)
-		Sub_df1.rename(columns={y_data1: 'y'}, inplace=True)
+    # Copy the main dataframe
+    Sub_df1 = df.copy()
+    # Delete any rows that do not exist in the checkboxes/default user choices.
+    Sub_df1 = Sub_df1[Sub_df1[color_column].isin(color_to_plot)]
+    Sub_df1 = Sub_df1[Sub_df1[marker_column].isin(marker_to_plot)]
+    # Search for the columns with the x_data and y_data names and replace
+    # them with 'x' and 'y'. Unless plotting the same data on both in which
+    # case add an extra column for 'y' that's a copy of 'x'.
+    if x_data1 == y_data1:
+        Sub_df1.rename(columns={x_data1: 'x'}, inplace=True)
+        Sub_df1.loc[:, 'y'] = Sub_df1.loc[:, 'x']
+    else:
+        Sub_df1.rename(columns={x_data1: 'x'}, inplace=True)
+        Sub_df1.rename(columns={y_data1: 'y'}, inplace=True)
 
-	return Sub_df1
+    return Sub_df1
 
 
 def Make_Dataset_Tolerance(x_data1, y_data1, Sub_df1, df_tol1):
