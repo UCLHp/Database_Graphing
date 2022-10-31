@@ -76,7 +76,7 @@ def produce_doc(doc):
 
     photon_db_path_fe = Config.Main.photon_db_path_fe
     proton_db_path_fe = Config.Main.proton_db_path_fe
-    print(proton_db_path_fe)
+
     # Connect to the database.
     photon_conn = pypyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
                                    r'DBQ=' + photon_db_path_fe + ';'
