@@ -39,12 +39,13 @@ import easygui as eg
 
 # Import the tab scripts.
 from scripts.PBT_Isocentre import pbt_isocentre_graph
+from scripts.PBT_Output import pbt_output_graph
 from scripts.PBT_Energy import pbt_energy_graph
 from scripts.ElectronOutput import Electron_Output_Graph
 from scripts.Sym import Sym_Graph
 from scripts.FlexitronOutput import Flexitron_Output_Graph
 from scripts.ElectronEnergy import Electron_Energy_Graph
-from scripts.PhotonOutput import Photon_Output_Graph
+# from scripts.PhotonOutput import Photon_Output_Graph
 from scripts.GulmayOutput import Gulmay_Output_Graph
 from config import Config
 
@@ -109,17 +110,18 @@ def produce_doc(doc):
     elif choice == 'Proton':
         # Create each tab by running the relevant scripts
         tab1 = pbt_isocentre_graph(proton_conn, Config)
-        tab2 = pbt_energy_graph(proton_conn, Config)
+        # tab2 = pbt_output_graph(proton_conn, Config)
+        tab3 = pbt_energy_graph(proton_conn, Config)
         # Put all the tabs into one application
-        tabs = Tabs(tabs=[tab1, tab2])
+        tabs = Tabs(tabs=[tab1, tab3])
     elif choice == 'TrueBeam':
         # Create each tab by running the relevant scripts
-        tab1 = Photon_Output_Graph(photon_conn, Config)
+        # tab1 = Photon_Output_Graph(photon_conn, Config)
         tab2 = Electron_Energy_Graph(photon_conn, Config)
         tab3 = Electron_Output_Graph(photon_conn, Config)
         tab4 = Sym_Graph(photon_conn, Config)
         # Put all the tabs into one application
-        tabs = Tabs(tabs=[tab1, tab2, tab3, tab4])
+        tabs = Tabs(tabs=[tab2, tab3, tab4])
     elif choice == 'Gulmay':
         tab1 = Gulmay_Output_Graph(photon_conn, Config)
         # Put all the tabs into one application
