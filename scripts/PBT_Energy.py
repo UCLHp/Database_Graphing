@@ -190,12 +190,12 @@ def pbt_energy_graph(conn, Config):
     # will interact with a custom function made in this file.
     if tolerance_boolean is True:
         df_tol1 = pd.DataFrame({'adate': [df['adate'].max(), df['adate'].max()],
-                                'prox 80 gantry diff': [-0.3, 0.3],
-                                'prox 90 gantry diff': [-0.3, 0.3],
-                                'dist 90 gantry diff': [-0.3, 0.3],
-                                'dist 80 gantry diff': [-0.3, 0.3],
-                                'dist 20 gantry diff': [-0.3, 0.3],
-                                'dist 10 gantry diff': [-0.3, 0.3],
+                                'prox 80 gantry diff': [-0.5, 0.5],
+                                'prox 90 gantry diff': [-0.5, 0.5],
+                                'dist 90 gantry diff': [-0.5, 0.5],
+                                'dist 80 gantry diff': [-0.5, 0.5],
+                                'dist 20 gantry diff': [-0.5, 0.5],
+                                'dist 10 gantry diff': [-0.5, 0.5],
                                 'prox 80 plan diff': [-1, 1],
                                 'prox 90 plan diff': [-1, 1],
                                 'dist 90 plan diff': [-1, 1],
