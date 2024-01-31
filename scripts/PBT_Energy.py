@@ -129,9 +129,7 @@ def pbt_energy_graph(conn, Config):
 
     # From the legend defined above give the values that will be pre-ticked
     # when the plot is opened.
-    color_to_plot = ['70', '80', '90', '100', '110', '120', '130', '140',
-                     '150', '160', '170', '180', '190', '200', '210', '220',
-                     '230', '240', '245']
+    color_to_plot = ['70', '110', '160', '200', '240']
     marker_to_plot = ['Gantry 1', 'Gantry 2', 'Gantry 3', 'Gantry 4']
 
     # Create a dataframe containing the data from the table

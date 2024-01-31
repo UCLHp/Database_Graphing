@@ -99,8 +99,8 @@ def pbt_isocentre_graph(conn, Config):
 
     # From the legend defined above give the values that will be pre-ticked
     # when the plot is opened.
-    color_to_plot = ['245']
-    marker_to_plot = ['0']
+    color_to_plot = ['70', '110', '160', '200', '240']
+    marker_to_plot = ['-120', '0', '120']
 
     # Create a dataframe containing the data from the table
     sql = 'SELECT [GA], [Energy], [x-offset], [y-offset], [Diameter], ' \
