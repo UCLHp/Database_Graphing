@@ -20,7 +20,7 @@ from bokeh.models import (CategoricalColorMapper, HoverTool, BoxZoomTool,
                           ColumnDataSource, Panel,
                           FuncTickFormatter, SingleIntervalTicker, LinearAxis,
                           CustomJS, DatetimeTickFormatter, BasicTickFormatter,
-                          NumeralTickFormatter, Range1d, Div)
+                          NumeralTickFormatter, Range1d, Div, ColorPicker)
 from bokeh.models.widgets import (CheckboxGroup, Slider, RangeSlider,
                                   Tabs, CheckboxButtonGroup, Dropdown,
                                   TableColumn, DataTable, Select,
@@ -284,6 +284,9 @@ def pbt_energy_graph(conn, Config):
     marker_title = Div(text='<b>Machine Name Choice</b>')
     hover_title = Div(text='<b>Hovertool Fields</b>')
 
+    picker = ColorPicker(title="Background Color", color="#808080")
+    picker.js_link('color', p1, 'background_fill_color')
+
     # Create a layout
     if color_column == marker_column:
         layout_checkbox = column([color_title, checkbox_color])
@@ -292,9 +295,24 @@ def pbt_energy_graph(conn, Config):
                                   checkbox_marker])
     button_row1 = row([update_button, range_button])
     button_row2 = row([quit_button, export_button])
-    layout_plots = column([button_row1, button_row2,
-                           select_xaxis, select_yaxis, select_legend, p1])
+    layout_plots = column([button_row1, button_row2, select_xaxis, select_yaxis,
+                           select_legend, p1, picker])
     tab_layout = row([layout_plots, layout_checkbox])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # ##################### CREATE CALLBACK FUNCTIONS #########################
 
@@ -351,6 +369,8 @@ def pbt_energy_graph(conn, Config):
         src1.data = Sub_df1.to_dict(orient='list')
         if tolerance_boolean is True:
             src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
+
+        p1.background_fill_color = picker.color
 
         return
 
@@ -415,6 +435,9 @@ def pbt_energy_graph(conn, Config):
         if tolerance_boolean is True:
             src1_tol.data = Sub_df1_tol1.to_dict(orient='list')
 
+        p1.background_fill_color = picker.color
+
+
         return
 
     update_button.on_click(callback_update)
@@ -471,6 +494,8 @@ def pbt_energy_graph(conn, Config):
             elif plot1_ydata_to_plot in plan_params:
                 p1.y_range.start = -1.5
                 p1.y_range.end = 1.5
+
+        p1.background_fill_color = picker.color
 
         return
 
